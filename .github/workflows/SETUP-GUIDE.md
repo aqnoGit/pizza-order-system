@@ -11,68 +11,7 @@ Push/PR → Build Backend (Maven + Testes) → Build Frontend (Angular + Testes)
                                Deploy Backend  → Render.com
 ```
 
-## Pré-requisitos
-
-### 1. Criar conta no Cloudflare (Frontend)
-
-1. Acesse https://dash.cloudflare.com/sign-up
-2. Crie uma conta gratuita
-3. Vá em **Workers & Pages** → **Create** → **Pages** → **Connect to Git**
-4. Conecte seu repositório GitHub
-5. Configure:
-   - Build command: (deixe vazio, a pipeline faz o build)
-   - Build output directory: (deixe vazio)
-6. Pegue seu **Account ID** (aparece na URL ou em Overview)
-7. Crie um **API Token**: 
-   - Vá em https://dash.cloudflare.com/profile/api-tokens
-   - Create Token → Custom token
-   - Permissions: `Cloudflare Pages: Edit`
-   - Copie o token gerado
-
-### 2. Criar conta no Render (Backend)
-
-1. Acesse https://render.com e crie conta com GitHub
-2. Clique **New** → **Web Service**
-3. Conecte o repositório `pizza-order-system`
-4. Configure:
-   - Name: `pizza-order-system-api`
-   - Region: Oregon (mais perto do Brasil)
-   - Branch: `main`
-   - Root Directory: `backend`
-   - Runtime: Docker
-   - Instance Type: **Free**
-5. Em **Environment Variables**, adicione:
-   - `SPRING_DATASOURCE_URL` = (URL do Neon.tech, passo 3)
-   - `SPRING_DATASOURCE_USERNAME` = (seu user do Neon)
-   - `SPRING_DATASOURCE_PASSWORD` = (sua senha do Neon)
-   - `JWT_SECRET` = (gere uma string aleatória longa)
-   - `SPRING_PROFILES_ACTIVE` = `prod`
-6. Vá em **Settings** → copie o **Deploy Hook URL**
-
-### 3. Criar banco no Neon.tech (PostgreSQL)
-
-1. Acesse https://neon.tech e crie conta
-2. Clique **New Project**
-3. Nome: `pizzaria-db`
-4. Region: São Paulo (se disponível) ou US East
-5. Copie a **Connection String** que aparece:
-   ```
-   postgresql://user:password@ep-xxx.us-east-2.aws.neon.tech/pizzaria_db?sslmode=require
-   ```
-6. Use essa URL no Render (passo 2, variável SPRING_DATASOURCE_URL)
-
-### 4. Configurar Secrets no GitHub
-
-1. No repositório GitHub, vá em **Settings** → **Secrets and variables** → **Actions**
-2. Clique **New repository secret** para cada um:
-
-| Secret Name | Valor | De onde pegar |
-|---|---|---|
-| `CLOUDFLARE_API_TOKEN` | Token da API | Cloudflare (passo 1) |
-| `CLOUDFLARE_ACCOUNT_ID` | Account ID | URL do dashboard Cloudflare |
-| `RENDER_DEPLOY_HOOK_URL` | Deploy Hook URL | Render Settings (passo 2) |
-
-### 5. Configurar o Angular para apontar para o backend
+### Configurar o Angular para apontar para o backend
 
 No arquivo `frontend/src/environments/environment.prod.ts`:
 ```typescript
