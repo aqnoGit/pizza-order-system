@@ -1,0 +1,74 @@
+<?xml version="1.0"?>
+<!DOCTYPE module PUBLIC
+    "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+    "https://checkstyle.org/dtds/configuration_1_3.dtd">
+
+<!--
+    Checkstyle Configuration - Sistema Pede Pizza
+    Baseado no Google Java Style com ajustes para o projeto.
+-->
+<module name="Checker">
+    <property name="charset" value="UTF-8"/>
+    <property name="severity" value="warning"/>
+
+    <!-- Tamanho maximo de linha: 120 caracteres -->
+    <module name="LineLength">
+        <property name="max" value="120"/>
+        <property name="ignorePattern" value="^package.*|^import.*|a href|href|http://|https://|ftp://"/>
+    </module>
+
+    <!-- Arquivo deve terminar com nova linha -->
+    <module name="NewlineAtEndOfFile"/>
+
+    <module name="TreeWalker">
+        <!-- === NAMING === -->
+        <!-- Classes: PascalCase -->
+        <module name="TypeName"/>
+        <!-- Metodos e variaveis: camelCase -->
+        <module name="MethodName"/>
+        <module name="MemberName"/>
+        <module name="LocalVariableName"/>
+        <module name="ParameterName"/>
+        <!-- Constantes: UPPER_SNAKE_CASE -->
+        <module name="ConstantName"/>
+        <!-- Pacotes: lowercase -->
+        <module name="PackageName">
+            <property name="format" value="^[a-z]+(\.[a-z][a-z0-9]*)*$"/>
+        </module>
+
+        <!-- === IMPORTS === -->
+        <!-- Sem imports com wildcard (*) -->
+        <module name="AvoidStarImport"/>
+        <!-- Sem imports nao utilizados -->
+        <module name="UnusedImports"/>
+
+        <!-- === BLOCOS === -->
+        <!-- Chaves obrigatorias em if/else/for/while -->
+        <module name="NeedBraces"/>
+        <!-- Chave de abertura na mesma linha -->
+        <module name="LeftCurly"/>
+        <!-- Bloco vazio deve ter comentario -->
+        <module name="EmptyBlock">
+            <property name="option" value="TEXT"/>
+        </module>
+
+        <!-- === ESPACAMENTO === -->
+        <!-- Espaco apos virgula -->
+        <module name="WhitespaceAfter">
+            <property name="tokens" value="COMMA"/>
+        </module>
+
+        <!-- === BOAS PRATICAS === -->
+        <!-- Sem variavel escondendo campo da classe -->
+        <module name="HiddenField">
+            <property name="ignoreConstructorParameter" value="true"/>
+            <property name="ignoreSetter" value="true"/>
+        </module>
+        <!-- equals() e hashCode() devem ser sobrescritos juntos -->
+        <module name="EqualsHashCode"/>
+        <!-- Sem blocos try vazios -->
+        <module name="EmptyCatchBlock">
+            <property name="exceptionVariableName" value="expected|ignore"/>
+        </module>
+    </module>
+</module>
