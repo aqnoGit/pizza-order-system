@@ -1,0 +1,23 @@
+# Backend
+backend/target/
+backend/.mvn/wrapper/maven-wrapper.jar
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+
+# Ambiente / segredos
+.env
+.env.*
+!.env.example
+
+# IDEs / SO
+.idea/
+*.iml
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Testes
+backend/.jqwik-database

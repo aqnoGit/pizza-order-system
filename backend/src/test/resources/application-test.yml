@@ -1,0 +1,7 @@
+# Perfil de teste: H2 em modo PostgreSQL por padrao.
+# No CI, as variaveis SPRING_DATASOURCE_* apontam para o PostgreSQL do job e prevalecem.
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:h2:mem:pizzaria_test;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1}
+    username: ${SPRING_DATASOURCE_USERNAME:sa}
+    password: ${SPRING_DATASOURCE_PASSWORD:}

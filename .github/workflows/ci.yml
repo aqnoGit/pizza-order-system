@@ -15,7 +15,7 @@ on:
 
 env:
   JAVA_VERSION: '17'
-  NODE_VERSION: '20'
+  NODE_VERSION: '24'
 
 jobs:
   # ============================================================
@@ -79,7 +79,7 @@ jobs:
       - name: Checkout do codigo
         uses: actions/checkout@v4
 
-      - name: Configurar Node.js 20
+      - name: Configurar Node.js 24
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -90,9 +90,9 @@ jobs:
         working-directory: ./frontend
         run: npm ci
 
-      - name: Rodar testes (Karma/Jasmine)
+      - name: Rodar testes (Vitest)
         working-directory: ./frontend
-        run: npm run test -- --watch=false --browsers=ChromeHeadless
+        run: npm test -- --watch=false
 
       - name: Build de producao
         working-directory: ./frontend
