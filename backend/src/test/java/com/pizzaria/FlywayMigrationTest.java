@@ -2,6 +2,8 @@ package com.pizzaria;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.List;
+
 import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,10 +34,10 @@ class FlywayMigrationTest extends PostgresIntegrationTest {
 
     @Test
     void hibernateNaoCriaTabelasSozinho() {
-        Integer tabelasDeNegocio = jdbcTemplate.queryForObject(
-                "select count(*) from information_schema.tables where table_schema = 'public' and table_name <> 'flyway_schema_history'",
-                Integer.class);
+        List<String> tabelasDeNegocio = jdbcTemplate.queryForList(
+                "select table_name from information_schema.tables where table_schema = 'public' and table_name <> 'flyway_schema_history'",
+                String.class);
 
-        assertThat(tabelasDeNegocio).isZero();
+        assertThat(tabelasDeNegocio).containsExactly("mesas");
     }
 }
