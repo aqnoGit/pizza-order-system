@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: pizza-order-system
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/pizzaria}
+    username: ${SPRING_DATASOURCE_USERNAME:pizzaria}
+    password: ${SPRING_DATASOURCE_PASSWORD:}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+server:
+  port: ${PORT:8080}
