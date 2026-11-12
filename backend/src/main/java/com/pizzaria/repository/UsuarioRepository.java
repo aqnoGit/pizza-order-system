@@ -10,4 +10,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface UsuarioRepository extends JpaRepository<Usuario, UUID> {
 
     Optional<Usuario> findByNomeAndPerfilIn(String nome, Collection<Perfil> perfis);
+
+    Optional<Usuario> findByTelefoneAndPerfilIn(String telefone, Collection<Perfil> perfis);
+
+    boolean existsByNomeAndPerfil(String nome, Perfil perfil);
 }

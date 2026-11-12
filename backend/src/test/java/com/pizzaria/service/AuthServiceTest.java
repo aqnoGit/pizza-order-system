@@ -7,8 +7,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-import com.pizzaria.dto.LoginFuncionarioRequest;
-import com.pizzaria.dto.TokenResponse;
+import com.pizzaria.dto.request.LoginClienteRequest;
+import com.pizzaria.dto.request.LoginFuncionarioRequest;
+import com.pizzaria.dto.response.TokenResponse;
 import com.pizzaria.entity.Perfil;
 import com.pizzaria.entity.Usuario;
 import com.pizzaria.exception.CredenciaisInvalidasException;
@@ -52,14 +53,14 @@ class AuthServiceTest {
     }
 
     @Test
-    void buscaApenasPerfisGarcomECozinha() {
+    void buscaPerfisDeFuncionarioIncluindoAdmin() {
         Usuario cozinheiro = funcionario(Perfil.COZINHA, HASH);
         when(usuarioRepository.findByNomeAndPerfilIn(any(), any())).thenReturn(Optional.of(cozinheiro));
         when(passwordEncoder.matches(any(), any())).thenReturn(true);
 
         authService.loginFuncionario(new LoginFuncionarioRequest("joao", "segredo"));
 
-        verify(usuarioRepository).findByNomeAndPerfilIn("joao", java.util.List.of(Perfil.GARCOM, Perfil.COZINHA));
+        verify(usuarioRepository).findByNomeAndPerfilIn("joao", java.util.List.of(Perfil.GARCOM, Perfil.COZINHA, Perfil.ADMIN));
     }
 
     @Test
@@ -91,6 +92,41 @@ class AuthServiceTest {
         assertThatThrownBy(() -> authService.loginFuncionario(new LoginFuncionarioRequest("maria", "segredo")))
                 .isInstanceOf(CredenciaisInvalidasException.class);
         verifyNoInteractions(passwordEncoder, jwtService);
+    }
+
+    @Test
+    void adminRecebeTokenPeloLoginDeFuncionario() {
+        Usuario admin = funcionario(Perfil.ADMIN, HASH);
+        when(usuarioRepository.findByNomeAndPerfilIn(any(), any())).thenReturn(Optional.of(admin));
+        when(passwordEncoder.matches("admin123", HASH)).thenReturn(true);
+        when(jwtService.gerarToken(admin)).thenReturn("token-admin");
+
+        TokenResponse resposta = authService.loginFuncionario(new LoginFuncionarioRequest("admin", "admin123"));
+
+        assertThat(resposta.token()).isEqualTo("token-admin");
+    }
+
+    @Test
+    void loginDeClienteBuscaPorTelefoneOsPerfisClienteEAdmin() {
+        Usuario cliente = funcionario(Perfil.CLIENTE, HASH);
+        when(usuarioRepository.findByTelefoneAndPerfilIn(any(), any())).thenReturn(Optional.of(cliente));
+        when(passwordEncoder.matches("segredo", HASH)).thenReturn(true);
+        when(jwtService.gerarToken(cliente)).thenReturn("token-cliente");
+
+        TokenResponse resposta = authService.loginCliente(new LoginClienteRequest("11999999999", "segredo"));
+
+        assertThat(resposta.token()).isEqualTo("token-cliente");
+        verify(usuarioRepository).findByTelefoneAndPerfilIn(
+                "11999999999", java.util.List.of(Perfil.CLIENTE, Perfil.ADMIN));
+    }
+
+    @Test
+    void loginDeClienteRejeitaQuandoNaoEncontrado() {
+        when(usuarioRepository.findByTelefoneAndPerfilIn(any(), any())).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> authService.loginCliente(new LoginClienteRequest("11000000000", "x")))
+                .isInstanceOf(CredenciaisInvalidasException.class);
+        verifyNoInteractions(jwtService);
     }
 
     private Usuario funcionario(Perfil perfil, String credenciais) {

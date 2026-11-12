@@ -1,4 +1,4 @@
-package com.pizzaria.dto;
+package com.pizzaria.dto.response;
 
 public record TokenResponse(String token) {
 }

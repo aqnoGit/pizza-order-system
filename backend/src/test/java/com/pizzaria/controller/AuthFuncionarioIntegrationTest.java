@@ -48,17 +48,19 @@ class AuthFuncionarioIntegrationTest extends PostgresIntegrationTest {
     private final String garcom = "garcom." + sufixo;
     private final String cozinha = "cozinha." + sufixo;
     private final String cliente = "cliente." + sufixo;
+    private final String admin = "admin." + sufixo;
 
     @BeforeEach
     void criarUsuarios() {
         inserir(garcom, "11911111111", Perfil.GARCOM);
         inserir(cozinha, "11922222222", Perfil.COZINHA);
         inserir(cliente, "11933333333", Perfil.CLIENTE);
+        inserir(admin, "11944444444", Perfil.ADMIN);
     }
 
     @AfterEach
     void limparUsuarios() {
-        jdbcTemplate.update("delete from usuarios where nome in (?, ?, ?)", garcom, cozinha, cliente);
+        jdbcTemplate.update("delete from usuarios where nome in (?, ?, ?, ?)", garcom, cozinha, cliente, admin);
     }
 
     @Test
@@ -73,6 +75,13 @@ class AuthFuncionarioIntegrationTest extends PostgresIntegrationTest {
         String token = logar(cozinha, SENHA);
 
         assertThat(jwtService.lerClaims(token).get("perfil", String.class)).isEqualTo("COZINHA");
+    }
+
+    @Test
+    void adminComSenhaCorretaRecebeTokenComPerfilAdmin() throws Exception {
+        String token = logar(admin, SENHA);
+
+        assertThat(jwtService.lerClaims(token).get("perfil", String.class)).isEqualTo("ADMIN");
     }
 
     @Test

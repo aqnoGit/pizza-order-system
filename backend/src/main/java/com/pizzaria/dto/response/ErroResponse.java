@@ -1,4 +1,4 @@
-package com.pizzaria.dto;
+package com.pizzaria.dto.response;
 
 import java.time.Instant;
 import java.util.List;

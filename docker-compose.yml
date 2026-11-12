@@ -20,6 +20,7 @@ services:
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       JWT_SECRET: ${JWT_SECRET}
+      SPRING_PROFILES_ACTIVE: dev
     ports: ["8080:8080"]
     depends_on:
       postgres:

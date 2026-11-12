@@ -56,25 +56,26 @@ class UsuariosMigrationTest extends PostgresIntegrationTest {
     }
 
     @Test
-    void aceitaOsTresPerfisEPreencheCriadoEm() {
+    void aceitaOsQuatroPerfisEPreencheCriadoEm() {
         UUID clienteId = UUID.randomUUID();
         jdbcTemplate.update(INSERIR_USUARIO, clienteId, "Ana", "11999990001", "CLIENTE", null);
         jdbcTemplate.update(INSERIR_USUARIO, UUID.randomUUID(), "Bia", "11999990002", "GARCOM", "hash");
         jdbcTemplate.update(INSERIR_USUARIO, UUID.randomUUID(), "Caio", "11999990003", "COZINHA", "hash");
+        jdbcTemplate.update(INSERIR_USUARIO, UUID.randomUUID(), "Eva", "11999990005", "ADMIN", "hash");
 
         Integer total = jdbcTemplate.queryForObject(
-                "select count(*) from usuarios where perfil in ('CLIENTE', 'GARCOM', 'COZINHA')", Integer.class);
+                "select count(*) from usuarios where perfil in ('CLIENTE', 'GARCOM', 'COZINHA', 'ADMIN')", Integer.class);
         Integer comCriadoEm = jdbcTemplate.queryForObject(
                 "select count(*) from usuarios where id = ? and criado_em is not null", Integer.class, clienteId);
 
-        assertThat(total).isGreaterThanOrEqualTo(3);
+        assertThat(total).isGreaterThanOrEqualTo(4);
         assertThat(comCriadoEm).isEqualTo(1);
     }
 
     @Test
     void rejeitaPerfilInvalido() {
         assertThatThrownBy(() -> jdbcTemplate.update(
-                INSERIR_USUARIO, UUID.randomUUID(), "Dan", "11999990004", "ADMIN", null))
+                INSERIR_USUARIO, UUID.randomUUID(), "Dan", "11999990004", "SUPERUSUARIO", null))
                 .isInstanceOf(DataIntegrityViolationException.class);
     }
 

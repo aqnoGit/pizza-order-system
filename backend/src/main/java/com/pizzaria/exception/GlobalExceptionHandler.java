@@ -1,6 +1,6 @@
 package com.pizzaria.exception;
 
-import com.pizzaria.dto.ErroResponse;
+import com.pizzaria.dto.response.ErroResponse;
 import java.time.Instant;
 import java.util.List;
 import org.springframework.http.HttpStatus;
