@@ -1,6 +1,7 @@
 package com.pizzaria.entity;
 
 import com.pizzaria.exception.ComandaFechadaException;
+import com.pizzaria.exception.ObservacaoInvalidaException;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -21,6 +22,10 @@ import lombok.NoArgsConstructor;
 public class Comanda {
 
     public static final String MENSAGEM_COMANDA_FECHADA = "Comanda fechada nao aceita novos itens";
+
+    public static final int TAMANHO_MAXIMO_OBSERVACAO = 500;
+
+    public static final String MENSAGEM_OBSERVACAO_MUITO_LONGA = "Observacao deve ter no maximo 500 caracteres";
 
     @Id
     private UUID id;
@@ -44,8 +49,11 @@ public class Comanda {
     @Column(name = "valor_total", nullable = false)
     private BigDecimal valorTotal;
 
+    @Column(length = TAMANHO_MAXIMO_OBSERVACAO)
+    private String observacao;
+
     public Comanda(UUID id, UUID mesaId, UUID garcomId, StatusComanda status, LocalDateTime abertaEm,
-            LocalDateTime fechadaEm, BigDecimal valorTotal) {
+            LocalDateTime fechadaEm, BigDecimal valorTotal, String observacao) {
         this.id = id;
         this.mesaId = mesaId;
         this.garcomId = garcomId;
@@ -53,11 +61,12 @@ public class Comanda {
         this.abertaEm = abertaEm;
         this.fechadaEm = fechadaEm;
         this.valorTotal = valorTotal;
+        this.observacao = observacao;
     }
 
     public static Comanda abrir(UUID mesaId, UUID garcomId) {
         return new Comanda(UUID.randomUUID(), mesaId, garcomId, StatusComanda.ABERTA, LocalDateTime.now(), null,
-                BigDecimal.ZERO);
+                BigDecimal.ZERO, null);
     }
 
     public boolean estaFechada() {
@@ -74,7 +83,11 @@ public class Comanda {
         this.valorTotal = this.valorTotal.add(valor);
     }
 
-    public void fechar(BigDecimal valorTotal) {
+    public void fechar(BigDecimal valorTotal, String observacao) {
+        if (observacao != null && observacao.length() > TAMANHO_MAXIMO_OBSERVACAO) {
+            throw new ObservacaoInvalidaException(MENSAGEM_OBSERVACAO_MUITO_LONGA);
+        }
+        this.observacao = observacao;
         this.valorTotal = valorTotal;
         this.status = StatusComanda.FECHADA;
         this.fechadaEm = LocalDateTime.now();

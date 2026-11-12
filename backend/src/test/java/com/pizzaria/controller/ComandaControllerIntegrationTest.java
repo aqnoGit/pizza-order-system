@@ -276,6 +276,46 @@ class ComandaControllerIntegrationTest extends PostgresIntegrationTest {
     }
 
     @Test
+    void fecharComObservacaoGravaEDevolveAObservacao() throws Exception {
+        UUID comandaId = inserirComanda("ABERTA");
+
+        mockMvc.perform(patch("/comandas/" + comandaId + "/fechar").header(HttpHeaders.AUTHORIZATION, bearer(Perfil.GARCOM))
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"observacao\":\"cliente pediu nota\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("FECHADA"))
+                .andExpect(jsonPath("$.observacao").value("cliente pediu nota"));
+
+        String observacaoPersistida = jdbcTemplate.queryForObject("select observacao from comandas where id = ?",
+                String.class, comandaId);
+        assertThat(observacaoPersistida).isEqualTo("cliente pediu nota");
+    }
+
+    @Test
+    void fecharComObservacaoNulaFechaNormalmente() throws Exception {
+        UUID comandaId = inserirComanda("ABERTA");
+
+        mockMvc.perform(patch("/comandas/" + comandaId + "/fechar").header(HttpHeaders.AUTHORIZATION, bearer(Perfil.GARCOM))
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"observacao\":null}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("FECHADA"))
+                .andExpect(jsonPath("$.observacao").doesNotExist());
+    }
+
+    @Test
+    void fecharComObservacaoMaiorQue500CaracteresRetorna422EMantemAComandaAberta() throws Exception {
+        UUID comandaId = inserirComanda("ABERTA");
+        String observacaoLonga = "a".repeat(501);
+
+        mockMvc.perform(patch("/comandas/" + comandaId + "/fechar").header(HttpHeaders.AUTHORIZATION, bearer(Perfil.GARCOM))
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"observacao\":\"" + observacaoLonga + "\"}"))
+                .andExpect(status().isUnprocessableEntity());
+
+        String statusPersistido = jdbcTemplate.queryForObject("select status from comandas where id = ?", String.class,
+                comandaId);
+        assertThat(statusPersistido).isEqualTo("ABERTA");
+    }
+
+    @Test
     void fecharComandaInexistenteRetorna404() throws Exception {
         mockMvc.perform(patch("/comandas/" + UUID.randomUUID() + "/fechar")
                         .header(HttpHeaders.AUTHORIZATION, bearer(Perfil.GARCOM)))
