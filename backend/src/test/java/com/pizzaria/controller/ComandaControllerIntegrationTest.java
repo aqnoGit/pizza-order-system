@@ -167,6 +167,26 @@ class ComandaControllerIntegrationTest extends PostgresIntegrationTest {
     }
 
     @Test
+    void garcomConsultaAComandaAbertaDaMesa() throws Exception {
+        UUID comandaId = UUID.randomUUID();
+        jdbcTemplate.update("insert into comandas (id, mesa_id, garcom_id, status) values (?, ?, ?, 'ABERTA')",
+                comandaId, mesaId, garcomId);
+
+        mockMvc.perform(get("/comandas/aberta").param("mesaId", mesaId.toString())
+                        .header(HttpHeaders.AUTHORIZATION, bearer(Perfil.GARCOM)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(comandaId.toString()))
+                .andExpect(jsonPath("$.status").value("ABERTA"));
+    }
+
+    @Test
+    void mesaSemComandaAbertaRetorna404() throws Exception {
+        mockMvc.perform(get("/comandas/aberta").param("mesaId", mesaId.toString())
+                        .header(HttpHeaders.AUTHORIZATION, bearer(Perfil.GARCOM)))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
     void consultaDeComandaInexistenteRetorna404() throws Exception {
         mockMvc.perform(get("/comandas/" + UUID.randomUUID()).header(HttpHeaders.AUTHORIZATION, bearer(Perfil.GARCOM)))
                 .andExpect(status().isNotFound());

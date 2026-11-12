@@ -128,6 +128,26 @@ class ComandaServiceTest {
     }
 
     @Test
+    void buscaAComandaAbertaDaMesa() {
+        Comanda comanda = Comanda.abrir(mesaId, garcomId);
+        when(comandaRepository.findByMesaIdAndStatus(mesaId, StatusComanda.ABERTA)).thenReturn(Optional.of(comanda));
+
+        ComandaResponse resposta = comandaService.buscarAbertaDaMesa(mesaId);
+
+        assertThat(resposta.id()).isEqualTo(comanda.getId());
+        assertThat(resposta.status()).isEqualTo(StatusComanda.ABERTA);
+    }
+
+    @Test
+    void lancaNaoEncontradoQuandoAMesaNaoTemComandaAberta() {
+        when(comandaRepository.findByMesaIdAndStatus(mesaId, StatusComanda.ABERTA)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> comandaService.buscarAbertaDaMesa(mesaId))
+                .isInstanceOf(RecursoNaoEncontradoException.class)
+                .hasMessage(ComandaService.MENSAGEM_MESA_SEM_COMANDA_ABERTA);
+    }
+
+    @Test
     void fechaComandaAbertaRegistrandoADataDeFechamento() {
         Comanda comanda = Comanda.abrir(mesaId, garcomId);
         when(comandaRepository.findById(comanda.getId())).thenReturn(Optional.of(comanda));
