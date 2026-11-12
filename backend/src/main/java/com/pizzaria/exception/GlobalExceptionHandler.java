@@ -24,6 +24,11 @@ public class GlobalExceptionHandler {
         return resposta(HttpStatus.NOT_FOUND, excecao.getMessage(), List.of());
     }
 
+    @ExceptionHandler(ConflitoException.class)
+    public ResponseEntity<ErroResponse> tratarConflito(ConflitoException excecao) {
+        return resposta(HttpStatus.CONFLICT, excecao.getMessage(), List.of());
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErroResponse> tratarValidacao(MethodArgumentNotValidException excecao) {
         List<String> campos = excecao.getBindingResult().getFieldErrors().stream()

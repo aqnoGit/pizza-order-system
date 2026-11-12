@@ -11,6 +11,7 @@ import com.pizzaria.dto.request.CriarComandaRequest;
 import com.pizzaria.dto.response.ComandaResponse;
 import com.pizzaria.entity.Comanda;
 import com.pizzaria.entity.StatusComanda;
+import com.pizzaria.exception.ConflitoException;
 import com.pizzaria.exception.RecursoNaoEncontradoException;
 import com.pizzaria.mapper.ComandaMapper;
 import com.pizzaria.repository.ComandaRepository;
@@ -64,6 +65,17 @@ class ComandaServiceTest {
         assertThatThrownBy(() -> comandaService.criar(new CriarComandaRequest(mesaId), garcomId))
                 .isInstanceOf(RecursoNaoEncontradoException.class)
                 .hasMessage(ComandaService.MENSAGEM_MESA_NAO_ENCONTRADA);
+        verify(comandaRepository, never()).save(any());
+    }
+
+    @Test
+    void lancaConflitoQuandoAMesaJaTemComandaAberta() {
+        when(mesaRepository.existsById(mesaId)).thenReturn(true);
+        when(comandaRepository.existsByMesaIdAndStatus(mesaId, StatusComanda.ABERTA)).thenReturn(true);
+
+        assertThatThrownBy(() -> comandaService.criar(new CriarComandaRequest(mesaId), garcomId))
+                .isInstanceOf(ConflitoException.class)
+                .hasMessage(ComandaService.MENSAGEM_MESA_COM_COMANDA_ABERTA);
         verify(comandaRepository, never()).save(any());
     }
 }
