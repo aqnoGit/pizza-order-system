@@ -13,6 +13,12 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
+import org.springframework.beans.factory.annotation.Value;
+import java.util.List;
+import org.springframework.security.config.Customizer;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -37,8 +43,21 @@ public class SecurityConfig {
     }
 
     @Bean
+    public CorsConfigurationSource corsConfigurationSource(
+            @Value("${cors.origens-permitidas:https://pizza-order-system.pages.dev,http://localhost:4200,http://localhost:4201}") List<String> origens) {
+        CorsConfiguration configuracao = new CorsConfiguration();
+        configuracao.setAllowedOrigins(origens);
+        configuracao.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        configuracao.setAllowedHeaders(List.of("*"));
+        UrlBasedCorsConfigurationSource fonte = new UrlBasedCorsConfigurationSource();
+        fonte.registerCorsConfiguration("/**", configuracao);
+        return fonte;
+    }
+
+    @Bean
     public SecurityFilterChain filterChain(HttpSecurity http, JwtService jwtService) throws Exception {
         return http
+                .cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(sessao -> sessao.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(requisicoes -> requisicoes
