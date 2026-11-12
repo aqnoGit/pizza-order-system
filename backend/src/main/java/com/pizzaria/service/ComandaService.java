@@ -3,6 +3,8 @@ package com.pizzaria.service;
 import com.pizzaria.dto.request.CriarComandaRequest;
 import com.pizzaria.dto.response.ComandaResponse;
 import com.pizzaria.entity.Comanda;
+import com.pizzaria.entity.StatusComanda;
+import com.pizzaria.exception.ConflitoException;
 import com.pizzaria.exception.RecursoNaoEncontradoException;
 import com.pizzaria.mapper.ComandaMapper;
 import com.pizzaria.repository.ComandaRepository;
@@ -18,6 +20,8 @@ public class ComandaService {
 
     public static final String MENSAGEM_MESA_NAO_ENCONTRADA = "Mesa nao encontrada";
 
+    public static final String MENSAGEM_MESA_COM_COMANDA_ABERTA = "Mesa ja possui uma comanda aberta";
+
     private final ComandaRepository comandaRepository;
     private final MesaRepository mesaRepository;
     private final ComandaMapper comandaMapper;
@@ -26,6 +30,9 @@ public class ComandaService {
     public ComandaResponse criar(CriarComandaRequest requisicao, UUID garcomId) {
         if (!mesaRepository.existsById(requisicao.mesaId())) {
             throw new RecursoNaoEncontradoException(MENSAGEM_MESA_NAO_ENCONTRADA);
+        }
+        if (comandaRepository.existsByMesaIdAndStatus(requisicao.mesaId(), StatusComanda.ABERTA)) {
+            throw new ConflitoException(MENSAGEM_MESA_COM_COMANDA_ABERTA);
         }
         Comanda comanda = comandaRepository.save(Comanda.abrir(requisicao.mesaId(), garcomId));
         return comandaMapper.paraResponse(comanda);

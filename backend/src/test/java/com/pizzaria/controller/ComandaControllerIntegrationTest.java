@@ -94,6 +94,31 @@ class ComandaControllerIntegrationTest extends PostgresIntegrationTest {
     }
 
     @Test
+    void mesaComComandaAbertaRetorna409() throws Exception {
+        mockMvc.perform(post("/comandas").header(HttpHeaders.AUTHORIZATION, bearer(Perfil.GARCOM))
+                        .contentType(MediaType.APPLICATION_JSON).content(corpo(mesaId.toString())))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(post("/comandas").header(HttpHeaders.AUTHORIZATION, bearer(Perfil.GARCOM))
+                        .contentType(MediaType.APPLICATION_JSON).content(corpo(mesaId.toString())))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.status").value(409));
+
+        Integer total = jdbcTemplate.queryForObject(CONSULTA_COMANDAS_ABERTAS, Integer.class, mesaId, garcomId);
+        assertThat(total).isEqualTo(1);
+    }
+
+    @Test
+    void mesaSoComComandaFechadaCriaNovaComanda() throws Exception {
+        jdbcTemplate.update("insert into comandas (id, mesa_id, garcom_id, status) values (?, ?, ?, 'FECHADA')",
+                UUID.randomUUID(), mesaId, garcomId);
+
+        mockMvc.perform(post("/comandas").header(HttpHeaders.AUTHORIZATION, bearer(Perfil.GARCOM))
+                        .contentType(MediaType.APPLICATION_JSON).content(corpo(mesaId.toString())))
+                .andExpect(status().isCreated());
+    }
+
+    @Test
     void cozinhaRetorna403() throws Exception {
         mockMvc.perform(post("/comandas").header(HttpHeaders.AUTHORIZATION, bearer(Perfil.COZINHA))
                         .contentType(MediaType.APPLICATION_JSON).content(corpo(mesaId.toString())))
