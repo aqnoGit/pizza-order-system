@@ -1,0 +1,34 @@
+package com.pizzaria.exception;
+
+import com.pizzaria.dto.ErroResponse;
+import java.time.Instant;
+import java.util.List;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+
+    private static final String MENSAGEM_DADOS_INVALIDOS = "Dados invalidos";
+
+    @ExceptionHandler(CredenciaisInvalidasException.class)
+    public ResponseEntity<ErroResponse> tratarCredenciaisInvalidas(CredenciaisInvalidasException excecao) {
+        return resposta(HttpStatus.UNAUTHORIZED, excecao.getMessage(), List.of());
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErroResponse> tratarValidacao(MethodArgumentNotValidException excecao) {
+        List<String> campos = excecao.getBindingResult().getFieldErrors().stream()
+                .map(erro -> erro.getField())
+                .toList();
+        return resposta(HttpStatus.BAD_REQUEST, MENSAGEM_DADOS_INVALIDOS, campos);
+    }
+
+    private ResponseEntity<ErroResponse> resposta(HttpStatus status, String mensagem, List<String> campos) {
+        ErroResponse corpo = new ErroResponse(Instant.now(), status.value(), mensagem, campos);
+        return ResponseEntity.status(status).body(corpo);
+    }
+}
