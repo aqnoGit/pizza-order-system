@@ -109,6 +109,35 @@ class PedidoTest {
     }
 
     @Test
+    void registraFinalizacaoAoIrParaPronto() {
+        Pedido pedido = pedidoRegistrado();
+        pedido.avancarPara(StatusPedido.EM_PREPARO);
+        LocalDateTime antes = LocalDateTime.now();
+
+        pedido.avancarPara(StatusPedido.PRONTO);
+
+        assertThat(pedido.getFinalizadoEm()).isNotNull().isBetween(antes, LocalDateTime.now());
+    }
+
+    @Test
+    void finalizacaoContinuaNulaAteIrParaPronto() {
+        Pedido pedido = pedidoRegistrado();
+        assertThat(pedido.getFinalizadoEm()).isNull();
+
+        pedido.avancarPara(StatusPedido.EM_PREPARO);
+
+        assertThat(pedido.getFinalizadoEm()).isNull();
+    }
+
+    @Test
+    void transicaoInvalidaNaoAlteraFinalizacao() {
+        Pedido pedido = pedidoRegistrado();
+
+        assertThatThrownBy(() -> pedido.avancarPara(StatusPedido.PRONTO)).isInstanceOf(ConflitoException.class);
+        assertThat(pedido.getFinalizadoEm()).isNull();
+    }
+
+    @Test
     void naoVolta() {
         Pedido pedido = pedidoRegistrado();
         pedido.avancarPara(StatusPedido.EM_PREPARO);

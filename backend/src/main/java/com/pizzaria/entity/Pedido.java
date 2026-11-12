@@ -47,6 +47,9 @@ public class Pedido {
     @Column(name = "inicio_preparo")
     private LocalDateTime inicioPreparo;
 
+    @Column(name = "finalizado_em")
+    private LocalDateTime finalizadoEm;
+
     @Column(name = "valor_total", nullable = false)
     private BigDecimal valorTotal;
 
@@ -75,6 +78,9 @@ public class Pedido {
         this.status = novoStatus;
         if (novoStatus == StatusPedido.EM_PREPARO) {
             this.inicioPreparo = LocalDateTime.now();
+        }
+        if (novoStatus == StatusPedido.PRONTO) {
+            this.finalizadoEm = LocalDateTime.now();
         }
     }
 }
