@@ -1,0 +1,60 @@
+services:
+  postgres:
+    image: postgres:16
+    ports: ["127.0.0.1:${POSTGRES_PORT:-5432}:5432"]
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes: [postgres_data:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: ./backend
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+    ports: ["8080:8080"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    build: ./frontend
+    ports: ["4200:80"]
+    depends_on: [backend]
+
+  mvn:
+    image: maven:3.9-eclipse-temurin-17
+    profiles: ["tools"]
+    working_dir: /workspace/backend
+    volumes: [".:/workspace", "m2_cache:/root/.m2"]
+    environment:
+      SPRING_PROFILES_ACTIVE: test
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    entrypoint: ["mvn", "-B"]
+
+  web:
+    image: node:24
+    profiles: ["tools"]
+    working_dir: /workspace/frontend
+    volumes:
+      - .:/workspace
+      - npm_cache:/root/.npm
+      - web_node_modules:/workspace/frontend/node_modules
+
+volumes:
+  postgres_data:
+  m2_cache:
+  npm_cache:
+  web_node_modules:
