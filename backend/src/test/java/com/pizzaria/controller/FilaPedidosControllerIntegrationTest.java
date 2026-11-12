@@ -115,6 +115,24 @@ class FilaPedidosControllerIntegrationTest extends PostgresIntegrationTest {
     }
 
     @Test
+    void filaMistaTrazOrigemDeCadaPedidoNaOrdemDeRegistro() throws Exception {
+        inserirPedidoPresencial("REGISTRADO", "2026-01-01 10:00:00");
+        UUID entrega = UUID.randomUUID();
+        jdbcTemplate.update(
+                "insert into pedidos (id, cliente_id, origem, status, registrado_em, valor_total) values (?, ?, 'ENTREGA', 'REGISTRADO', '2026-01-01 10:05:00', 42.50)",
+                entrega, clienteId);
+        inserirItem(entrega, 1, null);
+
+        mockMvc.perform(get(ROTA).header(HttpHeaders.AUTHORIZATION, bearer(Perfil.COZINHA)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].origem").value("PRESENCIAL"))
+                .andExpect(jsonPath("$[0].numeroMesa").value(NUMERO_MESA))
+                .andExpect(jsonPath("$[1].origem").value("ENTREGA"))
+                .andExpect(jsonPath("$[1].numeroMesa").isEmpty());
+    }
+
+    @Test
     void trazItensComProdutoEQuantidade() throws Exception {
         UUID pedido = inserirPedidoPresencial("REGISTRADO", "2026-01-01 10:00:00");
         inserirItem(pedido, 3, "sem cebola");
