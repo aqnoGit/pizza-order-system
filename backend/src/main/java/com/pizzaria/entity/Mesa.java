@@ -36,4 +36,8 @@ public class Mesa {
     public void ocupar() {
         this.status = StatusMesa.OCUPADA;
     }
+
+    public void liberar() {
+        this.status = StatusMesa.LIVRE;
+    }
 }

@@ -58,7 +58,10 @@ public class ComandaService {
         if (comanda.estaFechada()) {
             throw new ConflitoException(MENSAGEM_COMANDA_JA_FECHADA);
         }
+        Mesa mesa = mesaRepository.findById(comanda.getMesaId())
+                .orElseThrow(() -> new RecursoNaoEncontradoException(MENSAGEM_MESA_NAO_ENCONTRADA));
         comanda.fechar(comandaRepository.somarValorDosItens(id));
+        mesa.liberar();
         return comandaMapper.paraResponse(comanda);
     }
 }
