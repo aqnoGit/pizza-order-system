@@ -131,6 +131,7 @@ class ComandaServiceTest {
     void fechaComandaAbertaRegistrandoADataDeFechamento() {
         Comanda comanda = Comanda.abrir(mesaId, garcomId);
         when(comandaRepository.findById(comanda.getId())).thenReturn(Optional.of(comanda));
+        when(mesaRepository.findById(mesaId)).thenReturn(Optional.of(mesa));
 
         ComandaResponse resposta = comandaService.fechar(comanda.getId());
 
@@ -142,6 +143,7 @@ class ComandaServiceTest {
     void fechaComandaGravandoOValorTotalSomadoDosItens() {
         Comanda comanda = Comanda.abrir(mesaId, garcomId);
         when(comandaRepository.findById(comanda.getId())).thenReturn(Optional.of(comanda));
+        when(mesaRepository.findById(mesaId)).thenReturn(Optional.of(mesa));
         when(comandaRepository.somarValorDosItens(comanda.getId())).thenReturn(new BigDecimal("87.50"));
 
         ComandaResponse resposta = comandaService.fechar(comanda.getId());
@@ -153,6 +155,7 @@ class ComandaServiceTest {
     void fechaComandaSemItensComValorTotalZero() {
         Comanda comanda = Comanda.abrir(mesaId, garcomId);
         when(comandaRepository.findById(comanda.getId())).thenReturn(Optional.of(comanda));
+        when(mesaRepository.findById(mesaId)).thenReturn(Optional.of(mesa));
         when(comandaRepository.somarValorDosItens(comanda.getId())).thenReturn(BigDecimal.ZERO);
 
         ComandaResponse resposta = comandaService.fechar(comanda.getId());
@@ -189,5 +192,41 @@ class ComandaServiceTest {
         assertThatThrownBy(() -> comandaService.fechar(id))
                 .isInstanceOf(RecursoNaoEncontradoException.class)
                 .hasMessage(ComandaService.MENSAGEM_COMANDA_NAO_ENCONTRADA);
+    }
+
+    @Test
+    void liberaAMesaAoFecharAComanda() {
+        Mesa mesaOcupada = new Mesa(mesaId, 1, StatusMesa.OCUPADA);
+        Comanda comanda = Comanda.abrir(mesaId, garcomId);
+        when(comandaRepository.findById(comanda.getId())).thenReturn(Optional.of(comanda));
+        when(mesaRepository.findById(mesaId)).thenReturn(Optional.of(mesaOcupada));
+
+        comandaService.fechar(comanda.getId());
+
+        assertThat(mesaOcupada.getStatus()).isEqualTo(StatusMesa.LIVRE);
+    }
+
+    @Test
+    void naoLiberaAMesaQuandoAComandaJaEstaFechada() {
+        Mesa mesaOcupada = new Mesa(mesaId, 1, StatusMesa.OCUPADA);
+        Comanda comanda = Comanda.abrir(mesaId, garcomId);
+        comanda.fechar(BigDecimal.ZERO);
+        when(comandaRepository.findById(comanda.getId())).thenReturn(Optional.of(comanda));
+
+        assertThatThrownBy(() -> comandaService.fechar(comanda.getId())).isInstanceOf(ConflitoException.class);
+        assertThat(mesaOcupada.getStatus()).isEqualTo(StatusMesa.OCUPADA);
+        verify(mesaRepository, never()).findById(any());
+    }
+
+    @Test
+    void lancaNaoEncontradoAoFecharComandaDeMesaInexistente() {
+        Comanda comanda = Comanda.abrir(mesaId, garcomId);
+        when(comandaRepository.findById(comanda.getId())).thenReturn(Optional.of(comanda));
+        when(mesaRepository.findById(mesaId)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> comandaService.fechar(comanda.getId()))
+                .isInstanceOf(RecursoNaoEncontradoException.class)
+                .hasMessage(ComandaService.MENSAGEM_MESA_NAO_ENCONTRADA);
+        assertThat(comanda.estaFechada()).isFalse();
     }
 }
