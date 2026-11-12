@@ -302,6 +302,51 @@ class ComandaControllerIntegrationTest extends PostgresIntegrationTest {
     }
 
     @Test
+    void fecharComCorpoSemOCampoObservacaoFechaComObservacaoNula() throws Exception {
+        UUID comandaId = inserirComanda("ABERTA");
+
+        mockMvc.perform(patch("/comandas/" + comandaId + "/fechar").header(HttpHeaders.AUTHORIZATION, bearer(Perfil.GARCOM))
+                        .contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("FECHADA"))
+                .andExpect(jsonPath("$.observacao").doesNotExist());
+
+        String observacaoPersistida = jdbcTemplate.queryForObject("select observacao from comandas where id = ?",
+                String.class, comandaId);
+        assertThat(observacaoPersistida).isNull();
+    }
+
+    @Test
+    void fecharComObservacaoVaziaFechaEGravaTextoVazio() throws Exception {
+        UUID comandaId = inserirComanda("ABERTA");
+
+        mockMvc.perform(patch("/comandas/" + comandaId + "/fechar").header(HttpHeaders.AUTHORIZATION, bearer(Perfil.GARCOM))
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"observacao\":\"\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("FECHADA"))
+                .andExpect(jsonPath("$.observacao").value(""));
+
+        String observacaoPersistida = jdbcTemplate.queryForObject("select observacao from comandas where id = ?",
+                String.class, comandaId);
+        assertThat(observacaoPersistida).isEmpty();
+    }
+
+    @Test
+    void fecharComObservacaoDe500CaracteresFechaEGravaIntegralmente() throws Exception {
+        UUID comandaId = inserirComanda("ABERTA");
+        String observacaoNoLimite = "a".repeat(500);
+
+        mockMvc.perform(patch("/comandas/" + comandaId + "/fechar").header(HttpHeaders.AUTHORIZATION, bearer(Perfil.GARCOM))
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"observacao\":\"" + observacaoNoLimite + "\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("FECHADA"));
+
+        String observacaoPersistida = jdbcTemplate.queryForObject("select observacao from comandas where id = ?",
+                String.class, comandaId);
+        assertThat(observacaoPersistida).isEqualTo(observacaoNoLimite);
+    }
+
+    @Test
     void fecharComObservacaoMaiorQue500CaracteresRetorna422EMantemAComandaAberta() throws Exception {
         UUID comandaId = inserirComanda("ABERTA");
         String observacaoLonga = "a".repeat(501);
