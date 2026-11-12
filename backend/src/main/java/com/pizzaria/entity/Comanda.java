@@ -61,7 +61,8 @@ public class Comanda {
         return status == StatusComanda.FECHADA;
     }
 
-    public void fechar() {
+    public void fechar(BigDecimal valorTotal) {
+        this.valorTotal = valorTotal;
         this.status = StatusComanda.FECHADA;
         this.fechadaEm = LocalDateTime.now();
     }

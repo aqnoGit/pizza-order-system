@@ -58,7 +58,7 @@ public class ComandaService {
         if (comanda.estaFechada()) {
             throw new ConflitoException(MENSAGEM_COMANDA_JA_FECHADA);
         }
-        comanda.fechar();
+        comanda.fechar(comandaRepository.somarValorDosItens(id));
         return comandaMapper.paraResponse(comanda);
     }
 }

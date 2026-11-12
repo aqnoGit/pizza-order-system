@@ -139,9 +139,41 @@ class ComandaServiceTest {
     }
 
     @Test
+    void fechaComandaGravandoOValorTotalSomadoDosItens() {
+        Comanda comanda = Comanda.abrir(mesaId, garcomId);
+        when(comandaRepository.findById(comanda.getId())).thenReturn(Optional.of(comanda));
+        when(comandaRepository.somarValorDosItens(comanda.getId())).thenReturn(new BigDecimal("87.50"));
+
+        ComandaResponse resposta = comandaService.fechar(comanda.getId());
+
+        assertThat(resposta.valorTotal()).isEqualByComparingTo("87.50");
+    }
+
+    @Test
+    void fechaComandaSemItensComValorTotalZero() {
+        Comanda comanda = Comanda.abrir(mesaId, garcomId);
+        when(comandaRepository.findById(comanda.getId())).thenReturn(Optional.of(comanda));
+        when(comandaRepository.somarValorDosItens(comanda.getId())).thenReturn(BigDecimal.ZERO);
+
+        ComandaResponse resposta = comandaService.fechar(comanda.getId());
+
+        assertThat(resposta.valorTotal()).isEqualByComparingTo(BigDecimal.ZERO);
+    }
+
+    @Test
+    void naoSomaOsItensQuandoAComandaJaEstaFechada() {
+        Comanda comanda = Comanda.abrir(mesaId, garcomId);
+        comanda.fechar(BigDecimal.ZERO);
+        when(comandaRepository.findById(comanda.getId())).thenReturn(Optional.of(comanda));
+
+        assertThatThrownBy(() -> comandaService.fechar(comanda.getId())).isInstanceOf(ConflitoException.class);
+        verify(comandaRepository, never()).somarValorDosItens(any());
+    }
+
+    @Test
     void lancaConflitoAoFecharComandaJaFechada() {
         Comanda comanda = Comanda.abrir(mesaId, garcomId);
-        comanda.fechar();
+        comanda.fechar(BigDecimal.ZERO);
         when(comandaRepository.findById(comanda.getId())).thenReturn(Optional.of(comanda));
 
         assertThatThrownBy(() -> comandaService.fechar(comanda.getId()))
