@@ -70,6 +70,10 @@ public class Comanda {
         }
     }
 
+    public void somarAoTotal(BigDecimal valor) {
+        this.valorTotal = this.valorTotal.add(valor);
+    }
+
     public void fechar(BigDecimal valorTotal) {
         this.valorTotal = valorTotal;
         this.status = StatusComanda.FECHADA;

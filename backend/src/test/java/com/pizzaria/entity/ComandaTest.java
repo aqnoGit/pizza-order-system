@@ -1,5 +1,6 @@
 package com.pizzaria.entity;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -25,5 +26,15 @@ class ComandaTest {
         assertThatThrownBy(comanda::exigirAberta)
                 .isInstanceOf(ComandaFechadaException.class)
                 .hasMessage(Comanda.MENSAGEM_COMANDA_FECHADA);
+    }
+
+    @Test
+    void somarAoTotalAcumulaOsValoresInformados() {
+        Comanda comanda = Comanda.abrir(UUID.randomUUID(), UUID.randomUUID());
+
+        comanda.somarAoTotal(new BigDecimal("85.00"));
+        comanda.somarAoTotal(new BigDecimal("14.50"));
+
+        assertThat(comanda.getValorTotal()).isEqualByComparingTo("99.50");
     }
 }
