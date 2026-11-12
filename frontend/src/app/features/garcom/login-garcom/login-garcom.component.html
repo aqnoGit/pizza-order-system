@@ -1,0 +1,15 @@
+<form class="login" [formGroup]="formulario" (ngSubmit)="entrar()">
+  <h2>Login do garçom</h2>
+
+  <label for="usuario">Usuário</label>
+  <input id="usuario" type="text" formControlName="usuario" autocomplete="username" />
+
+  <label for="senha">Senha</label>
+  <input id="senha" type="password" formControlName="senha" autocomplete="current-password" />
+
+  @if (erro()) {
+    <p class="erro" role="alert">{{ erro() }}</p>
+  }
+
+  <button type="submit" [disabled]="formulario.invalid || enviando()">Entrar</button>
+</form>
