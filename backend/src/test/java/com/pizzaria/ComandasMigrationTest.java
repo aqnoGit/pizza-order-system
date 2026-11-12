@@ -27,15 +27,15 @@ class ComandasMigrationTest extends PostgresIntegrationTest {
 
         assertThat(colunas).extracting(coluna -> coluna.get("column_name"))
                 .containsExactlyInAnyOrder(
-                        "id", "mesa_id", "garcom_id", "status", "aberta_em", "fechada_em", "valor_total");
+                        "id", "mesa_id", "garcom_id", "status", "aberta_em", "fechada_em", "valor_total", "observacao");
         assertThat(tipoDa(colunas, "id")).isEqualTo("uuid");
         assertThat(tipoDa(colunas, "status")).isEqualTo("character varying");
         assertThat(tipoDa(colunas, "valor_total")).isEqualTo("numeric");
         assertThat(colunas)
-                .filteredOn(coluna -> !coluna.get("column_name").equals("fechada_em"))
+                .filteredOn(coluna -> !List.of("fechada_em", "observacao").contains(coluna.get("column_name")))
                 .allMatch(coluna -> coluna.get("is_nullable").equals("NO"));
         assertThat(colunas)
-                .filteredOn(coluna -> coluna.get("column_name").equals("fechada_em"))
+                .filteredOn(coluna -> List.of("fechada_em", "observacao").contains(coluna.get("column_name")))
                 .allMatch(coluna -> coluna.get("is_nullable").equals("YES"));
     }
 
