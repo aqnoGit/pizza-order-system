@@ -32,4 +32,8 @@ public class Mesa {
         this.numero = numero;
         this.status = status;
     }
+
+    public void ocupar() {
+        this.status = StatusMesa.OCUPADA;
+    }
 }

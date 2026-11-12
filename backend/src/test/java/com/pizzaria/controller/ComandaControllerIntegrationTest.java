@@ -69,6 +69,16 @@ class ComandaControllerIntegrationTest extends PostgresIntegrationTest {
 
         Integer total = jdbcTemplate.queryForObject(CONSULTA_COMANDAS_ABERTAS, Integer.class, mesaId, garcomId);
         assertThat(total).isEqualTo(1);
+        assertThat(statusDaMesa()).isEqualTo("OCUPADA");
+    }
+
+    @Test
+    void mesaInexistenteNaoAlteraNenhumaMesa() throws Exception {
+        mockMvc.perform(post("/comandas").header(HttpHeaders.AUTHORIZATION, bearer(Perfil.GARCOM))
+                        .contentType(MediaType.APPLICATION_JSON).content(corpo(UUID.randomUUID().toString())))
+                .andExpect(status().isNotFound());
+
+        assertThat(statusDaMesa()).isEqualTo("LIVRE");
     }
 
     @Test
@@ -129,6 +139,10 @@ class ComandaControllerIntegrationTest extends PostgresIntegrationTest {
     void semTokenRetorna401() throws Exception {
         mockMvc.perform(post("/comandas").contentType(MediaType.APPLICATION_JSON).content(corpo(mesaId.toString())))
                 .andExpect(status().isUnauthorized());
+    }
+
+    private String statusDaMesa() {
+        return jdbcTemplate.queryForObject("select status from mesas where id = ?", String.class, mesaId);
     }
 
     private String corpo(String mesa) {

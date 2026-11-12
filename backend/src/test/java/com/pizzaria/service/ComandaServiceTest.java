@@ -10,13 +10,16 @@ import static org.mockito.Mockito.when;
 import com.pizzaria.dto.request.CriarComandaRequest;
 import com.pizzaria.dto.response.ComandaResponse;
 import com.pizzaria.entity.Comanda;
+import com.pizzaria.entity.Mesa;
 import com.pizzaria.entity.StatusComanda;
+import com.pizzaria.entity.StatusMesa;
 import com.pizzaria.exception.ConflitoException;
 import com.pizzaria.exception.RecursoNaoEncontradoException;
 import com.pizzaria.mapper.ComandaMapper;
 import com.pizzaria.repository.ComandaRepository;
 import com.pizzaria.repository.MesaRepository;
 import java.math.BigDecimal;
+import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -42,10 +45,11 @@ class ComandaServiceTest {
 
     private final UUID mesaId = UUID.randomUUID();
     private final UUID garcomId = UUID.randomUUID();
+    private final Mesa mesa = new Mesa(mesaId, 1, StatusMesa.LIVRE);
 
     @Test
     void criaComandaAbertaComValorZeradoEGarcomDoToken() {
-        when(mesaRepository.existsById(mesaId)).thenReturn(true);
+        when(mesaRepository.findById(mesaId)).thenReturn(Optional.of(mesa));
         when(comandaRepository.save(any(Comanda.class))).thenAnswer(chamada -> chamada.getArgument(0));
 
         ComandaResponse resposta = comandaService.criar(new CriarComandaRequest(mesaId), garcomId);
@@ -59,8 +63,18 @@ class ComandaServiceTest {
     }
 
     @Test
+    void mudaAMesaParaOcupadaAoCriarAComanda() {
+        when(mesaRepository.findById(mesaId)).thenReturn(Optional.of(mesa));
+        when(comandaRepository.save(any(Comanda.class))).thenAnswer(chamada -> chamada.getArgument(0));
+
+        comandaService.criar(new CriarComandaRequest(mesaId), garcomId);
+
+        assertThat(mesa.getStatus()).isEqualTo(StatusMesa.OCUPADA);
+    }
+
+    @Test
     void lancaNaoEncontradoQuandoAMesaNaoExiste() {
-        when(mesaRepository.existsById(mesaId)).thenReturn(false);
+        when(mesaRepository.findById(mesaId)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> comandaService.criar(new CriarComandaRequest(mesaId), garcomId))
                 .isInstanceOf(RecursoNaoEncontradoException.class)
@@ -69,8 +83,18 @@ class ComandaServiceTest {
     }
 
     @Test
+    void mantemAMesaLivreQuandoJaExisteComandaAberta() {
+        when(mesaRepository.findById(mesaId)).thenReturn(Optional.of(mesa));
+        when(comandaRepository.existsByMesaIdAndStatus(mesaId, StatusComanda.ABERTA)).thenReturn(true);
+
+        assertThatThrownBy(() -> comandaService.criar(new CriarComandaRequest(mesaId), garcomId))
+                .isInstanceOf(ConflitoException.class);
+        assertThat(mesa.getStatus()).isEqualTo(StatusMesa.LIVRE);
+    }
+
+    @Test
     void lancaConflitoQuandoAMesaJaTemComandaAberta() {
-        when(mesaRepository.existsById(mesaId)).thenReturn(true);
+        when(mesaRepository.findById(mesaId)).thenReturn(Optional.of(mesa));
         when(comandaRepository.existsByMesaIdAndStatus(mesaId, StatusComanda.ABERTA)).thenReturn(true);
 
         assertThatThrownBy(() -> comandaService.criar(new CriarComandaRequest(mesaId), garcomId))
