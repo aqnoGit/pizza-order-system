@@ -1,0 +1,53 @@
+<div class="pagina">
+  <div class="cartao">
+    <header class="cabecalho">
+      <img src="logo-pede-pizza.png" alt="Pede Pizza Pizzaria" class="logo" />
+    </header>
+
+    <main class="conteudo">
+      <h1 class="saudacao">{{ saudacao }}</h1>
+      <p class="frase">O bom serviço começa por aqui!</p>
+
+      <form [formGroup]="formulario" (ngSubmit)="entrar()">
+        <div class="campo">
+          <label for="usuario">Usuário</label>
+          <div class="campo-com-icone">
+            <ng-icon class="icone-inicio" name="lucideUser" aria-hidden="true" />
+            <input id="usuario" type="text" formControlName="usuario" placeholder="Digite aqui..." autocomplete="username" />
+          </div>
+        </div>
+
+        <div class="campo">
+          <label for="senha">Senha</label>
+          <div class="campo-com-icone">
+            <ng-icon class="icone-inicio" name="lucideLock" aria-hidden="true" />
+            <input id="senha" [type]="senhaVisivel() ? 'text' : 'password'" formControlName="senha" placeholder="*********" autocomplete="current-password" />
+            <button type="button" class="botao-icone" [attr.aria-label]="senhaVisivel() ? 'Ocultar senha' : 'Mostrar senha'" (click)="alternarSenhaVisivel()">
+              <ng-icon [name]="senhaVisivel() ? 'lucideEye' : 'lucideEyeOff'" aria-hidden="true" />
+            </button>
+          </div>
+        </div>
+
+        <label class="mostrar-senha">
+          <input type="checkbox" [checked]="senhaVisivel()" (change)="alternarSenhaVisivel()" />
+          Mostrar senha
+        </label>
+
+        @if (erro()) {
+          <p class="mensagem-erro erro" role="alert">{{ erro() }}</p>
+        }
+
+        <button type="submit" class="botao-primario" [disabled]="formulario.invalid || enviando()">
+          Entrar
+          <ng-icon name="lucideArrowRight" aria-hidden="true" />
+        </button>
+      </form>
+
+      <p class="acesso">
+        <ng-icon name="lucideCircleHelp" aria-hidden="true" />
+        Precisa de acesso? Fale com a administração.
+      </p>
+      <p class="versao">{{ versao }}</p>
+    </main>
+  </div>
+</div>

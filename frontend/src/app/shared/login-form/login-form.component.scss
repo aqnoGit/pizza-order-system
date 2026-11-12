@@ -1,0 +1,95 @@
+.pagina {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: white;
+}
+
+.cartao {
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .pagina {
+    align-items: center;
+    justify-content: center;
+    padding: clamp(24px, 4vh, 48px) 16px;
+  }
+
+  .cartao {
+    width: clamp(384px, 34vw, 480px);
+  }
+}
+
+.cabecalho {
+  display: flex;
+  justify-content: center;
+  padding: 24px 16px;
+  border-bottom: 1px solid var(--cor-borda);
+}
+
+.logo {
+  height: clamp(72px, 9vh, 104px);
+}
+
+.conteudo {
+  padding: clamp(28px, 4vh, 44px) clamp(20px, 4vw, 36px) 24px;
+}
+
+.saudacao,
+.frase {
+  margin: 0;
+  color: var(--cor-marca);
+  font-family: var(--fonte-titulo);
+  font-weight: 500;
+}
+
+.saudacao {
+  font-size: clamp(30px, 24px + 1.2vw, 40px);
+}
+
+.frase {
+  font-size: clamp(18px, 16px + 0.4vw, 22px);
+}
+
+.subtitulo {
+  margin: 16px 0 32px;
+  color: var(--cor-texto-secundario);
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.mostrar-senha {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--cor-texto-secundario);
+  font-size: 14px;
+}
+
+.acesso {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 32px 0 16px;
+  color: var(--cor-marca);
+  font-size: 14px;
+
+  ng-icon {
+    --ng-icon__size: 20px;
+  }
+}
+
+.versao {
+  margin: 0;
+  text-align: center;
+  color: var(--cor-texto-secundario);
+  font-size: 13px;
+}
