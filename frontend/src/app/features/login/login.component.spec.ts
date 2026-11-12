@@ -88,9 +88,9 @@ describe('LoginComponent', () => {
     expect(router.navigateByUrl).toHaveBeenCalledWith('/garcom');
   });
 
-  it('mostra o subtitulo generico e a caixa mostrar senha', () => {
+  it('mostra o subtitulo generico sem a caixa mostrar senha', () => {
     expect(elemento.querySelector('.subtitulo')?.textContent).toContain('acessar o sistema');
-    expect(elemento.querySelector('.mostrar-senha')?.textContent).toContain('Mostrar senha');
+    expect(elemento.querySelector('.mostrar-senha')).toBeNull();
   });
 
   it('mostra erro e nao salva nada quando as credenciais sao invalidas', () => {
