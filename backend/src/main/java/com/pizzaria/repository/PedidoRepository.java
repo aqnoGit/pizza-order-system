@@ -11,4 +11,7 @@ public interface PedidoRepository extends JpaRepository<Pedido, UUID> {
 
     @EntityGraph(attributePaths = "itens")
     List<Pedido> findByStatusOrderByRegistradoEmAsc(StatusPedido status);
+
+    @EntityGraph(attributePaths = "itens")
+    List<Pedido> findByComandaId(UUID comandaId);
 }
