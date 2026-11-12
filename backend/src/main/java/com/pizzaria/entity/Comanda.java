@@ -56,4 +56,13 @@ public class Comanda {
         return new Comanda(UUID.randomUUID(), mesaId, garcomId, StatusComanda.ABERTA, LocalDateTime.now(), null,
                 BigDecimal.ZERO);
     }
+
+    public boolean estaFechada() {
+        return status == StatusComanda.FECHADA;
+    }
+
+    public void fechar() {
+        this.status = StatusComanda.FECHADA;
+        this.fechadaEm = LocalDateTime.now();
+    }
 }
