@@ -12,6 +12,9 @@ import com.pizzaria.PostgresIntegrationTest;
 import com.pizzaria.entity.Perfil;
 import com.pizzaria.entity.Usuario;
 import com.pizzaria.service.JwtService;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,6 +44,7 @@ class ComandaControllerIntegrationTest extends PostgresIntegrationTest {
 
     private final UUID mesaId = UUID.randomUUID();
     private final UUID garcomId = UUID.randomUUID();
+    private final List<UUID> produtosCriados = new ArrayList<>();
 
     @BeforeEach
     void criarMesaEGarcom() {
@@ -51,7 +55,10 @@ class ComandaControllerIntegrationTest extends PostgresIntegrationTest {
 
     @AfterEach
     void limpar() {
+        jdbcTemplate.update("delete from itens_pedido where pedido_id in (select p.id from pedidos p join comandas c on c.id = p.comanda_id where c.mesa_id = ?)", mesaId);
+        jdbcTemplate.update("delete from pedidos where comanda_id in (select id from comandas where mesa_id = ?)", mesaId);
         jdbcTemplate.update("delete from comandas where mesa_id = ?", mesaId);
+        produtosCriados.forEach(id -> jdbcTemplate.update("delete from produtos where id = ?", id));
         jdbcTemplate.update("delete from mesas where id = ?", mesaId);
         jdbcTemplate.update("delete from usuarios where id = ?", garcomId);
     }
@@ -191,6 +198,31 @@ class ComandaControllerIntegrationTest extends PostgresIntegrationTest {
     }
 
     @Test
+    void fecharComandaGravaOValorTotalSomadoDosItensDeTodosOsPedidos() throws Exception {
+        UUID comandaId = inserirComanda("ABERTA");
+        UUID produtoId = inserirProduto();
+        inserirPedidoComItens(comandaId, produtoId, "40.00", 2);
+        inserirPedidoComItens(comandaId, produtoId, "12.50", 1);
+
+        mockMvc.perform(patch("/comandas/" + comandaId + "/fechar").header(HttpHeaders.AUTHORIZATION, bearer(Perfil.GARCOM)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.valorTotal").value(92.5));
+
+        BigDecimal valorPersistido = jdbcTemplate.queryForObject("select valor_total from comandas where id = ?",
+                BigDecimal.class, comandaId);
+        assertThat(valorPersistido).isEqualByComparingTo("92.50");
+    }
+
+    @Test
+    void fecharComandaSemItensGravaValorTotalZero() throws Exception {
+        UUID comandaId = inserirComanda("ABERTA");
+
+        mockMvc.perform(patch("/comandas/" + comandaId + "/fechar").header(HttpHeaders.AUTHORIZATION, bearer(Perfil.GARCOM)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.valorTotal").value(0));
+    }
+
+    @Test
     void fecharComandaJaFechadaRetorna409() throws Exception {
         UUID comandaId = inserirComanda("FECHADA");
 
@@ -223,6 +255,23 @@ class ComandaControllerIntegrationTest extends PostgresIntegrationTest {
         jdbcTemplate.update("insert into comandas (id, mesa_id, garcom_id, status) values (?, ?, ?, ?)", comandaId,
                 mesaId, garcomId, status);
         return comandaId;
+    }
+
+    private UUID inserirProduto() {
+        UUID produtoId = UUID.randomUUID();
+        jdbcTemplate.update("insert into produtos (id, nome, preco, categoria) values (?, ?, ?, ?)", produtoId,
+                "pizza teste", new BigDecimal("40.00"), "PIZZA");
+        produtosCriados.add(produtoId);
+        return produtoId;
+    }
+
+    private void inserirPedidoComItens(UUID comandaId, UUID produtoId, String precoUnitario, int quantidade) {
+        UUID pedidoId = UUID.randomUUID();
+        jdbcTemplate.update("insert into pedidos (id, comanda_id, origem, status) values (?, ?, 'PRESENCIAL', 'REGISTRADO')",
+                pedidoId, comandaId);
+        jdbcTemplate.update(
+                "insert into itens_pedido (id, pedido_id, produto_id, quantidade, preco_unitario) values (?, ?, ?, ?, ?)",
+                UUID.randomUUID(), pedidoId, produtoId, quantidade, new BigDecimal(precoUnitario));
     }
 
     private String statusDaMesa() {
