@@ -38,6 +38,6 @@ class FlywayMigrationTest extends PostgresIntegrationTest {
                 "select table_name from information_schema.tables where table_schema = 'public' and table_name <> 'flyway_schema_history'",
                 String.class);
 
-        assertThat(tabelasDeNegocio).containsExactlyInAnyOrder("comandas", "mesas", "pedidos", "usuarios");
+        assertThat(tabelasDeNegocio).containsExactlyInAnyOrder("comandas", "mesas", "pedidos", "produtos", "usuarios");
     }
 }
