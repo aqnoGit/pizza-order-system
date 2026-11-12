@@ -142,6 +142,6 @@ class PedidoServiceTest {
     }
 
     private CriarPedidoRequest requisicao(UUID produtoId, int quantidade) {
-        return new CriarPedidoRequest(List.of(new ItemPedidoRequest(produtoId, quantidade)));
+        return new CriarPedidoRequest(List.of(new ItemPedidoRequest(produtoId, quantidade, null)));
     }
 }

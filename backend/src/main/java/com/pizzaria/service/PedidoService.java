@@ -49,6 +49,6 @@ public class PedidoService {
         if (!produto.isDisponivel()) {
             throw new ProdutoIndisponivelException(MENSAGEM_PRODUTO_INDISPONIVEL);
         }
-        return ItemPedido.de(produto, item.quantidade());
+        return ItemPedido.de(produto, item.quantidade(), item.observacao());
     }
 }
