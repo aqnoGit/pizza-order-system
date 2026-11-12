@@ -21,6 +21,7 @@
         <java.version>17</java.version>
         <jjwt.version>0.12.6</jjwt.version>
         <jqwik.version>1.9.1</jqwik.version>
+        <escpos-coffee.version>4.1.0</escpos-coffee.version>
         <jacoco.version>0.8.12</jacoco.version>
         <checkstyle-plugin.version>3.5.0</checkstyle-plugin.version>
         <checkstyle.version>10.20.1</checkstyle.version>
@@ -77,6 +78,11 @@
             <artifactId>jjwt-jackson</artifactId>
             <version>${jjwt.version}</version>
             <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.github.anastaciocintra</groupId>
+            <artifactId>escpos-coffee</artifactId>
+            <version>${escpos-coffee.version}</version>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
