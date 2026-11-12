@@ -16,15 +16,34 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @WebMvcTest(AuthController.class)
-@Import({SecurityConfig.class, SecurityConfigTest.JwtServiceReal.class})
+@Import({SecurityConfig.class, SecurityConfigTest.JwtServiceReal.class, SecurityConfigTest.RotasPorPerfil.class})
 @ActiveProfiles("test")
 class SecurityConfigTest {
 
     private static final String ROTA_PROTEGIDA = "/rota-protegida";
+
+    @RestController
+    static class RotasPorPerfil {
+
+        @GetMapping("/teste/cozinha")
+        @PreAuthorize("hasRole('COZINHA')")
+        String rotaDaCozinha() {
+            return "cozinha";
+        }
+
+        @GetMapping("/teste/garcom")
+        @PreAuthorize("hasRole('GARCOM')")
+        String rotaDoGarcom() {
+            return "garcom";
+        }
+    }
 
     @TestConfiguration
     static class JwtServiceReal {
@@ -61,5 +80,32 @@ class SecurityConfigTest {
 
         mockMvc.perform(get(ROTA_PROTEGIDA).header("Authorization", "Bearer " + token))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void retorna401EmRotaPorPerfilSemToken() throws Exception {
+        mockMvc.perform(get("/teste/cozinha")).andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void retorna403QuandoGarcomAcessaRotaDaCozinha() throws Exception {
+        mockMvc.perform(get("/teste/cozinha").header("Authorization", "Bearer " + tokenDe(Perfil.GARCOM)))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void retorna403QuandoClienteAcessaRotaDoGarcom() throws Exception {
+        mockMvc.perform(get("/teste/garcom").header("Authorization", "Bearer " + tokenDe(Perfil.CLIENTE)))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void permiteQuandoCozinhaAcessaRotaDaCozinha() throws Exception {
+        mockMvc.perform(get("/teste/cozinha").header("Authorization", "Bearer " + tokenDe(Perfil.COZINHA)))
+                .andExpect(status().isOk());
+    }
+
+    private String tokenDe(Perfil perfil) {
+        return jwtService.gerarToken(new Usuario(UUID.randomUUID(), "usuario", "11999999999", perfil, "hash"));
     }
 }
