@@ -1,4 +1,4 @@
-package com.pizzaria.dto;
+package com.pizzaria.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 

@@ -30,6 +30,20 @@ describe('AuthService', () => {
     expect(localStorage.getItem(CHAVE_TOKEN)).toBe('jwt-abc');
   });
 
+  it('le o perfil do token guardado', () => {
+    localStorage.setItem(CHAVE_TOKEN, `a.${btoa(JSON.stringify({ perfil: 'ADMIN' }))}.c`);
+
+    expect(service.perfilAtual()).toBe('ADMIN');
+  });
+
+  it('retorna nulo sem token ou com token invalido', () => {
+    expect(service.perfilAtual()).toBeNull();
+
+    localStorage.setItem(CHAVE_TOKEN, 'lixo');
+
+    expect(service.perfilAtual()).toBeNull();
+  });
+
   it('nao guarda token quando o backend responde erro', () => {
     service.loginFuncionario({ usuario: 'joao', senha: 'x' }).subscribe({ error: () => undefined });
 

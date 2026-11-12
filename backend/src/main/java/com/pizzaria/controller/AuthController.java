@@ -1,7 +1,8 @@
 package com.pizzaria.controller;
 
-import com.pizzaria.dto.LoginFuncionarioRequest;
-import com.pizzaria.dto.TokenResponse;
+import com.pizzaria.dto.request.LoginClienteRequest;
+import com.pizzaria.dto.request.LoginFuncionarioRequest;
+import com.pizzaria.dto.response.TokenResponse;
 import com.pizzaria.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +19,12 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/funcionario")
-    public TokenResponse loginFuncionario(@Valid @RequestBody LoginFuncionarioRequest requisicao) {
-        return authService.loginFuncionario(requisicao);
+    public TokenResponse loginFuncionario(@Valid @RequestBody LoginFuncionarioRequest request) {
+        return authService.loginFuncionario(request);
+    }
+
+    @PostMapping("/cliente")
+    public TokenResponse loginCliente(@Valid @RequestBody LoginClienteRequest request) {
+        return authService.loginCliente(request);
     }
 }

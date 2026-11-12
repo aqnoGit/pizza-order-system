@@ -2,16 +2,12 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
-import { environment } from '../../../../environments/environment';
-import { CHAVE_TOKEN } from '../../../core/auth/auth.service';
-import {
-  LoginGarcomComponent,
-  MENSAGEM_LOGIN_INVALIDO,
-  ROTA_APOS_LOGIN_GARCOM,
-} from './login-garcom.component';
+import { environment } from '../../../environments/environment';
+import { CHAVE_TOKEN } from '../../core/auth/auth.service';
+import { LoginComponent, MENSAGEM_LOGIN_INVALIDO } from './login.component';
 
-describe('LoginGarcomComponent', () => {
-  let fixture: ComponentFixture<LoginGarcomComponent>;
+describe('LoginComponent', () => {
+  let fixture: ComponentFixture<LoginComponent>;
   let http: HttpTestingController;
   let router: Router;
   let elemento: HTMLElement;
@@ -34,10 +30,10 @@ describe('LoginGarcomComponent', () => {
   beforeEach(async () => {
     localStorage.clear();
     await TestBed.configureTestingModule({
-      imports: [LoginGarcomComponent],
+      imports: [LoginComponent],
       providers: [provideHttpClient(), provideHttpClientTesting()],
     }).compileComponents();
-    fixture = TestBed.createComponent(LoginGarcomComponent);
+    fixture = TestBed.createComponent(LoginComponent);
     http = TestBed.inject(HttpTestingController);
     router = TestBed.inject(Router);
     vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
@@ -56,16 +52,45 @@ describe('LoginGarcomComponent', () => {
     http.expectNone(`${environment.apiUrl}/auth/funcionario`);
   });
 
-  it('salva o token e navega quando o login tem sucesso', () => {
+  function tokenDoPerfil(perfil: string): string {
+    return `a.${btoa(JSON.stringify({ perfil }))}.c`;
+  }
+
+  function logarComo(perfil: string): void {
+    preencher('joao', '123');
+    enviar();
+    http.expectOne(`${environment.apiUrl}/auth/funcionario`).flush({ token: tokenDoPerfil(perfil) });
+  }
+
+  it('salva o token e envia a API as credenciais', () => {
     preencher('joao', '123');
     enviar();
 
     const req = http.expectOne(`${environment.apiUrl}/auth/funcionario`);
     expect(req.request.body).toEqual({ usuario: 'joao', senha: '123' });
-    req.flush({ token: 'jwt-abc' });
+    req.flush({ token: tokenDoPerfil('GARCOM') });
 
-    expect(localStorage.getItem(CHAVE_TOKEN)).toBe('jwt-abc');
-    expect(router.navigateByUrl).toHaveBeenCalledWith(ROTA_APOS_LOGIN_GARCOM);
+    expect(localStorage.getItem(CHAVE_TOKEN)).toBe(tokenDoPerfil('GARCOM'));
+  });
+
+  it('redireciona o garcom para a area do garcom', () => {
+    logarComo('GARCOM');
+    expect(router.navigateByUrl).toHaveBeenCalledWith('/garcom');
+  });
+
+  it('redireciona a cozinha para a area da cozinha', () => {
+    logarComo('COZINHA');
+    expect(router.navigateByUrl).toHaveBeenCalledWith('/cozinha');
+  });
+
+  it('redireciona o admin para uma area com acesso liberado', () => {
+    logarComo('ADMIN');
+    expect(router.navigateByUrl).toHaveBeenCalledWith('/garcom');
+  });
+
+  it('mostra o subtitulo generico sem a caixa mostrar senha', () => {
+    expect(elemento.querySelector('.subtitulo')?.textContent).toContain('acessar o sistema');
+    expect(elemento.querySelector('.mostrar-senha')).toBeNull();
   });
 
   it('mostra erro e nao salva nada quando as credenciais sao invalidas', () => {

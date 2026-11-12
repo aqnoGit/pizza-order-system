@@ -7,7 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.pizzaria.config.SecurityConfig;
-import com.pizzaria.dto.TokenResponse;
+import com.pizzaria.dto.response.TokenResponse;
 import com.pizzaria.exception.CredenciaisInvalidasException;
 import com.pizzaria.service.AuthService;
 import com.pizzaria.service.JwtService;
@@ -61,5 +61,22 @@ class AuthControllerTest {
                         .content("{\"usuario\":\"\",\"senha\":\"\"}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.campos").isArray());
+    }
+
+    @Test
+    void retorna200ComTokenNoLoginDeCliente() throws Exception {
+        when(authService.loginCliente(any())).thenReturn(new TokenResponse("token-cliente"));
+
+        mockMvc.perform(post("/auth/cliente").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"telefone\":\"11999999999\",\"senha\":\"segredo\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").value("token-cliente"));
+    }
+
+    @Test
+    void retorna400NoLoginDeClienteSemSenha() throws Exception {
+        mockMvc.perform(post("/auth/cliente").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"telefone\":\"11999999999\",\"senha\":\"\"}"))
+                .andExpect(status().isBadRequest());
     }
 }

@@ -1,7 +1,8 @@
 package com.pizzaria.service;
 
-import com.pizzaria.dto.LoginFuncionarioRequest;
-import com.pizzaria.dto.TokenResponse;
+import com.pizzaria.dto.request.LoginClienteRequest;
+import com.pizzaria.dto.request.LoginFuncionarioRequest;
+import com.pizzaria.dto.response.TokenResponse;
 import com.pizzaria.entity.Perfil;
 import com.pizzaria.entity.Usuario;
 import com.pizzaria.exception.CredenciaisInvalidasException;
@@ -16,7 +17,8 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class AuthService {
 
-    private static final List<Perfil> PERFIS_FUNCIONARIO = List.of(Perfil.GARCOM, Perfil.COZINHA);
+    private static final List<Perfil> PERFIS_FUNCIONARIO = List.of(Perfil.GARCOM, Perfil.COZINHA, Perfil.ADMIN);
+    private static final List<Perfil> PERFIS_CLIENTE = List.of(Perfil.CLIENTE, Perfil.ADMIN);
 
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
@@ -33,5 +35,14 @@ public class AuthService {
 
     private boolean senhaConfere(String senha, Usuario usuario) {
         return usuario.getCredenciais() != null && passwordEncoder.matches(senha, usuario.getCredenciais());
+    }
+
+    @Transactional(readOnly = true)
+    public TokenResponse loginCliente(LoginClienteRequest requisicao) {
+        Usuario cliente = usuarioRepository
+                .findByTelefoneAndPerfilIn(requisicao.telefone(), PERFIS_CLIENTE)
+                .filter(usuario -> senhaConfere(requisicao.senha(), usuario))
+                .orElseThrow(CredenciaisInvalidasException::new);
+        return new TokenResponse(jwtService.gerarToken(cliente));
     }
 }

@@ -38,6 +38,12 @@ class SecurityConfigTest {
             return "cozinha";
         }
 
+        @GetMapping("/teste/cliente")
+        @PreAuthorize("hasRole('CLIENTE')")
+        String rotaDoCliente() {
+            return "cliente";
+        }
+
         @GetMapping("/teste/garcom")
         @PreAuthorize("hasRole('GARCOM')")
         String rotaDoGarcom() {
@@ -103,6 +109,21 @@ class SecurityConfigTest {
     void permiteQuandoCozinhaAcessaRotaDaCozinha() throws Exception {
         mockMvc.perform(get("/teste/cozinha").header("Authorization", "Bearer " + tokenDe(Perfil.COZINHA)))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void adminAcessaRotasDeGarcomCozinhaECliente() throws Exception {
+        String cabecalho = "Bearer " + tokenDe(Perfil.ADMIN);
+
+        mockMvc.perform(get("/teste/garcom").header("Authorization", cabecalho)).andExpect(status().isOk());
+        mockMvc.perform(get("/teste/cozinha").header("Authorization", cabecalho)).andExpect(status().isOk());
+        mockMvc.perform(get("/teste/cliente").header("Authorization", cabecalho)).andExpect(status().isOk());
+    }
+
+    @Test
+    void garcomNaoAcessaRotaDeCliente() throws Exception {
+        mockMvc.perform(get("/teste/cliente").header("Authorization", "Bearer " + tokenDe(Perfil.GARCOM)))
+                .andExpect(status().isForbidden());
     }
 
     private String tokenDe(Perfil perfil) {
