@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.pizzaria.exception.ConflitoException;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -82,6 +83,29 @@ class PedidoTest {
         assertThatThrownBy(() -> pedido.avancarPara(StatusPedido.PRONTO)).isInstanceOf(ConflitoException.class);
         assertThatThrownBy(() -> pedido.avancarPara(StatusPedido.ENTREGUE)).isInstanceOf(ConflitoException.class);
         assertThat(pedido.getStatus()).isEqualTo(StatusPedido.REGISTRADO);
+    }
+
+    @Test
+    void registraInicioDoPreparoAoIrParaEmPreparo() {
+        Pedido pedido = pedidoRegistrado();
+        LocalDateTime antes = LocalDateTime.now();
+
+        pedido.avancarPara(StatusPedido.EM_PREPARO);
+
+        assertThat(pedido.getInicioPreparo()).isNotNull().isBetween(antes, LocalDateTime.now());
+    }
+
+    @Test
+    void inicioDoPreparoContinuaNuloEnquantoNaoEntraEmPreparo() {
+        assertThat(pedidoRegistrado().getInicioPreparo()).isNull();
+    }
+
+    @Test
+    void transicaoInvalidaNaoAlteraInicioDoPreparo() {
+        Pedido pedido = pedidoRegistrado();
+
+        assertThatThrownBy(() -> pedido.avancarPara(StatusPedido.PRONTO)).isInstanceOf(ConflitoException.class);
+        assertThat(pedido.getInicioPreparo()).isNull();
     }
 
     @Test

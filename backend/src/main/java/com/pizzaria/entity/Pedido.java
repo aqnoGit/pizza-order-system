@@ -44,6 +44,9 @@ public class Pedido {
     @Column(name = "registrado_em", nullable = false)
     private LocalDateTime registradoEm;
 
+    @Column(name = "inicio_preparo")
+    private LocalDateTime inicioPreparo;
+
     @Column(name = "valor_total", nullable = false)
     private BigDecimal valorTotal;
 
@@ -70,5 +73,8 @@ public class Pedido {
             throw new ConflitoException(MENSAGEM_TRANSICAO_INVALIDA + status + " para " + novoStatus);
         }
         this.status = novoStatus;
+        if (novoStatus == StatusPedido.EM_PREPARO) {
+            this.inicioPreparo = LocalDateTime.now();
+        }
     }
 }
