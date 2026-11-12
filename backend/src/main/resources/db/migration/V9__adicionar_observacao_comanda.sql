@@ -1,0 +1,1 @@
+ALTER TABLE comandas ADD COLUMN observacao VARCHAR(500) NULL;
