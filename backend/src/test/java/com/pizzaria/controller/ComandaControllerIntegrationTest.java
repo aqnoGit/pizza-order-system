@@ -198,6 +198,30 @@ class ComandaControllerIntegrationTest extends PostgresIntegrationTest {
     }
 
     @Test
+    void fecharComandaLiberaAMesa() throws Exception {
+        jdbcTemplate.update("update mesas set status = 'OCUPADA' where id = ?", mesaId);
+        UUID comandaId = inserirComanda("ABERTA");
+
+        mockMvc.perform(patch("/comandas/" + comandaId + "/fechar").header(HttpHeaders.AUTHORIZATION, bearer(Perfil.GARCOM)))
+                .andExpect(status().isOk());
+
+        String statusMesa = jdbcTemplate.queryForObject("select status from mesas where id = ?", String.class, mesaId);
+        assertThat(statusMesa).isEqualTo("LIVRE");
+    }
+
+    @Test
+    void fecharComandaJaFechadaNaoAlteraAMesa() throws Exception {
+        jdbcTemplate.update("update mesas set status = 'OCUPADA' where id = ?", mesaId);
+        UUID comandaId = inserirComanda("FECHADA");
+
+        mockMvc.perform(patch("/comandas/" + comandaId + "/fechar").header(HttpHeaders.AUTHORIZATION, bearer(Perfil.GARCOM)))
+                .andExpect(status().isConflict());
+
+        String statusMesa = jdbcTemplate.queryForObject("select status from mesas where id = ?", String.class, mesaId);
+        assertThat(statusMesa).isEqualTo("OCUPADA");
+    }
+
+    @Test
     void fecharComandaGravaOValorTotalSomadoDosItensDeTodosOsPedidos() throws Exception {
         UUID comandaId = inserirComanda("ABERTA");
         UUID produtoId = inserirProduto();
