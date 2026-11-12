@@ -1,6 +1,7 @@
 package com.pizzaria.controller;
 
 import com.pizzaria.dto.request.CriarComandaRequest;
+import com.pizzaria.dto.response.ComandaDetalhesResponse;
 import com.pizzaria.dto.response.ComandaResponse;
 import com.pizzaria.service.ComandaService;
 import jakarta.validation.Valid;
@@ -9,6 +10,8 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -26,5 +29,10 @@ public class ComandaController {
             Authentication autenticacao) {
         ComandaResponse comanda = comandaService.criar(requisicao, UUID.fromString(autenticacao.getName()));
         return ResponseEntity.created(URI.create("/comandas/" + comanda.id())).body(comanda);
+    }
+
+    @GetMapping("/{id}")
+    public ComandaDetalhesResponse buscarPorId(@PathVariable UUID id) {
+        return comandaService.buscarPorId(id);
     }
 }
