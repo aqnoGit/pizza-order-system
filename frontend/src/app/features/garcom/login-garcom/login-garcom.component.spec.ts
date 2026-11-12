@@ -48,7 +48,7 @@ describe('LoginGarcomComponent', () => {
   afterEach(() => http.verify());
 
   it('bloqueia o envio e nao chama a API com campos vazios', () => {
-    const botao = elemento.querySelector<HTMLButtonElement>('button')!;
+    const botao = elemento.querySelector<HTMLButtonElement>('button[type="submit"]')!;
     expect(botao.disabled).toBe(true);
 
     enviar();
