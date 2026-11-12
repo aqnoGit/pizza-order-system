@@ -126,4 +126,36 @@ class ComandaServiceTest {
                 .isInstanceOf(RecursoNaoEncontradoException.class)
                 .hasMessage(ComandaService.MENSAGEM_COMANDA_NAO_ENCONTRADA);
     }
+
+    @Test
+    void fechaComandaAbertaRegistrandoADataDeFechamento() {
+        Comanda comanda = Comanda.abrir(mesaId, garcomId);
+        when(comandaRepository.findById(comanda.getId())).thenReturn(Optional.of(comanda));
+
+        ComandaResponse resposta = comandaService.fechar(comanda.getId());
+
+        assertThat(resposta.status()).isEqualTo(StatusComanda.FECHADA);
+        assertThat(resposta.fechadaEm()).isNotNull();
+    }
+
+    @Test
+    void lancaConflitoAoFecharComandaJaFechada() {
+        Comanda comanda = Comanda.abrir(mesaId, garcomId);
+        comanda.fechar();
+        when(comandaRepository.findById(comanda.getId())).thenReturn(Optional.of(comanda));
+
+        assertThatThrownBy(() -> comandaService.fechar(comanda.getId()))
+                .isInstanceOf(ConflitoException.class)
+                .hasMessage(ComandaService.MENSAGEM_COMANDA_JA_FECHADA);
+    }
+
+    @Test
+    void lancaNaoEncontradoAoFecharComandaInexistente() {
+        UUID id = UUID.randomUUID();
+        when(comandaRepository.findById(id)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> comandaService.fechar(id))
+                .isInstanceOf(RecursoNaoEncontradoException.class)
+                .hasMessage(ComandaService.MENSAGEM_COMANDA_NAO_ENCONTRADA);
+    }
 }

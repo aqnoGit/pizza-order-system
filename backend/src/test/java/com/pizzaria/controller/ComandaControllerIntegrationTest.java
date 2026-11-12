@@ -2,6 +2,7 @@ package com.pizzaria.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -173,6 +174,55 @@ class ComandaControllerIntegrationTest extends PostgresIntegrationTest {
     void cozinhaNaoConsultaComanda() throws Exception {
         mockMvc.perform(get("/comandas/" + UUID.randomUUID()).header(HttpHeaders.AUTHORIZATION, bearer(Perfil.COZINHA)))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void garcomFechaComandaAberta() throws Exception {
+        UUID comandaId = inserirComanda("ABERTA");
+
+        mockMvc.perform(patch("/comandas/" + comandaId + "/fechar").header(HttpHeaders.AUTHORIZATION, bearer(Perfil.GARCOM)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("FECHADA"))
+                .andExpect(jsonPath("$.fechadaEm").isNotEmpty());
+
+        String statusPersistido = jdbcTemplate.queryForObject("select status from comandas where id = ?", String.class,
+                comandaId);
+        assertThat(statusPersistido).isEqualTo("FECHADA");
+    }
+
+    @Test
+    void fecharComandaJaFechadaRetorna409() throws Exception {
+        UUID comandaId = inserirComanda("FECHADA");
+
+        mockMvc.perform(patch("/comandas/" + comandaId + "/fechar").header(HttpHeaders.AUTHORIZATION, bearer(Perfil.GARCOM)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.mensagem").value("Comanda ja esta fechada"));
+    }
+
+    @Test
+    void fecharComandaInexistenteRetorna404() throws Exception {
+        mockMvc.perform(patch("/comandas/" + UUID.randomUUID() + "/fechar")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(Perfil.GARCOM)))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void fecharComandaSemTokenRetorna401() throws Exception {
+        mockMvc.perform(patch("/comandas/" + UUID.randomUUID() + "/fechar")).andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void cozinhaNaoFechaComanda() throws Exception {
+        mockMvc.perform(patch("/comandas/" + UUID.randomUUID() + "/fechar")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(Perfil.COZINHA)))
+                .andExpect(status().isForbidden());
+    }
+
+    private UUID inserirComanda(String status) {
+        UUID comandaId = UUID.randomUUID();
+        jdbcTemplate.update("insert into comandas (id, mesa_id, garcom_id, status) values (?, ?, ?, ?)", comandaId,
+                mesaId, garcomId, status);
+        return comandaId;
     }
 
     private String statusDaMesa() {
