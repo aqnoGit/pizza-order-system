@@ -7,6 +7,7 @@
     <main class="conteudo">
       <h1 class="saudacao">{{ saudacao }}</h1>
       <p class="frase">O bom serviço começa por aqui!</p>
+      <p class="subtitulo">{{ subtitulo() }}</p>
 
       <form [formGroup]="formulario" (ngSubmit)="entrar()">
         <div class="campo">
@@ -27,11 +28,6 @@
             </button>
           </div>
         </div>
-
-        <label class="mostrar-senha">
-          <input type="checkbox" [checked]="senhaVisivel()" (change)="alternarSenhaVisivel()" />
-          Mostrar senha
-        </label>
 
         @if (erro()) {
           <p class="mensagem-erro erro" role="alert">{{ erro() }}</p>
