@@ -3,7 +3,9 @@ package com.pizzaria.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -34,6 +36,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 @ExtendWith(MockitoExtension.class)
 class PedidoServiceTest {
@@ -46,6 +49,9 @@ class PedidoServiceTest {
 
     @Mock
     private PedidoRepository pedidoRepository;
+
+    @Mock
+    private SimpMessagingTemplate mensageria;
 
     @Spy
     private PedidoMapper pedidoMapper = new PedidoMapper();
@@ -107,6 +113,17 @@ class PedidoServiceTest {
     }
 
     @Test
+    void publicaPedidoCriadoNaFilaDaCozinha() {
+        when(comandaRepository.findById(comanda.getId())).thenReturn(Optional.of(comanda));
+        when(produtoRepository.findById(produto.getId())).thenReturn(Optional.of(produto));
+        when(pedidoRepository.save(any(Pedido.class))).thenAnswer(chamada -> chamada.getArgument(0));
+
+        PedidoResponse resposta = pedidoService.criarPresencial(comanda.getId(), requisicao(produto.getId(), 1));
+
+        verify(mensageria, times(1)).convertAndSend(PedidoService.TOPICO_FILA_PEDIDOS, resposta);
+    }
+
+    @Test
     void somaValorDoPedidoAoTotalDaComanda() {
         when(comandaRepository.findById(comanda.getId())).thenReturn(Optional.of(comanda));
         when(produtoRepository.findById(produto.getId())).thenReturn(Optional.of(produto));
@@ -148,6 +165,7 @@ class PedidoServiceTest {
         assertThatThrownBy(() -> pedidoService.criarPresencial(comanda.getId(), requisicao(produto.getId(), 1)))
                 .isInstanceOf(ComandaFechadaException.class);
         verify(pedidoRepository, never()).save(any());
+        verify(mensageria, never()).convertAndSend(anyString(), any(Object.class));
     }
 
     @Test
@@ -160,6 +178,7 @@ class PedidoServiceTest {
                 .isInstanceOf(RecursoNaoEncontradoException.class)
                 .hasMessage(PedidoService.MENSAGEM_PRODUTO_NAO_ENCONTRADO);
         verify(pedidoRepository, never()).save(any());
+        verify(mensageria, never()).convertAndSend(anyString(), any(Object.class));
     }
 
     @Test
@@ -172,6 +191,7 @@ class PedidoServiceTest {
                 .isInstanceOf(ProdutoIndisponivelException.class)
                 .hasMessage(PedidoService.MENSAGEM_PRODUTO_INDISPONIVEL);
         verify(pedidoRepository, never()).save(any());
+        verify(mensageria, never()).convertAndSend(anyString(), any(Object.class));
     }
 
     private CriarPedidoRequest requisicao(UUID produtoId, int quantidade) {
