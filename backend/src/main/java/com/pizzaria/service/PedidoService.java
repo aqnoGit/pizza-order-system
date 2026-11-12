@@ -39,6 +39,7 @@ public class PedidoService {
         comanda.exigirAberta();
         List<ItemPedido> itens = requisicao.itens().stream().map(this::montarItem).toList();
         Pedido pedido = pedidoRepository.save(Pedido.presencial(comandaId, itens));
+        comanda.somarAoTotal(pedido.getValorTotal());
         return pedidoMapper.paraResponse(pedido);
     }
 

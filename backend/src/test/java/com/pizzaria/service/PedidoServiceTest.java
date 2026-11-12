@@ -74,6 +74,30 @@ class PedidoServiceTest {
     }
 
     @Test
+    void somaValorDoPedidoAoTotalDaComanda() {
+        when(comandaRepository.findById(comanda.getId())).thenReturn(Optional.of(comanda));
+        when(produtoRepository.findById(produto.getId())).thenReturn(Optional.of(produto));
+        when(pedidoRepository.save(any(Pedido.class))).thenAnswer(chamada -> chamada.getArgument(0));
+
+        pedidoService.criarPresencial(comanda.getId(), requisicao(produto.getId(), 2));
+        pedidoService.criarPresencial(comanda.getId(), requisicao(produto.getId(), 1));
+
+        assertThat(comanda.getValorTotal()).isEqualByComparingTo("127.50");
+    }
+
+    @Test
+    void naoAlteraTotalDaComandaQuandoProdutoIndisponivel() {
+        Produto esgotado = new Produto(UUID.randomUUID(), "Atum", null, BigDecimal.TEN, "PIZZA", false);
+        when(comandaRepository.findById(comanda.getId())).thenReturn(Optional.of(comanda));
+        when(produtoRepository.findById(esgotado.getId())).thenReturn(Optional.of(esgotado));
+
+        assertThatThrownBy(() -> pedidoService.criarPresencial(comanda.getId(), requisicao(esgotado.getId(), 1)))
+                .isInstanceOf(ProdutoIndisponivelException.class);
+
+        assertThat(comanda.getValorTotal()).isEqualByComparingTo("0");
+    }
+
+    @Test
     void comandaInexistenteLancaNaoEncontrado() {
         UUID id = UUID.randomUUID();
         when(comandaRepository.findById(id)).thenReturn(Optional.empty());

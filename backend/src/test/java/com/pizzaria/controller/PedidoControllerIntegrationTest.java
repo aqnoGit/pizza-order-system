@@ -10,6 +10,7 @@ import com.pizzaria.PostgresIntegrationTest;
 import com.pizzaria.entity.Perfil;
 import com.pizzaria.entity.Usuario;
 import com.pizzaria.service.JwtService;
+import java.math.BigDecimal;
 import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -80,6 +81,20 @@ class PedidoControllerIntegrationTest extends PostgresIntegrationTest {
                 "select count(*) from itens_pedido i join pedidos p on p.id = i.pedido_id where p.comanda_id = ? and p.origem = 'PRESENCIAL' and i.preco_unitario = 42.50",
                 Integer.class, comandaId);
         assertThat(itens).isEqualTo(1);
+    }
+
+    @Test
+    void criarPedidosAcumulaValorTotalDaComandaNoBanco() throws Exception {
+        mockMvc.perform(post(rota(comandaId)).header(HttpHeaders.AUTHORIZATION, bearer(Perfil.GARCOM))
+                        .contentType(MediaType.APPLICATION_JSON).content(corpo(produtoId, 2)))
+                .andExpect(status().isCreated());
+        mockMvc.perform(post(rota(comandaId)).header(HttpHeaders.AUTHORIZATION, bearer(Perfil.GARCOM))
+                        .contentType(MediaType.APPLICATION_JSON).content(corpo(produtoId, 1)))
+                .andExpect(status().isCreated());
+
+        BigDecimal total = jdbcTemplate.queryForObject("select valor_total from comandas where id = ?",
+                BigDecimal.class, comandaId);
+        assertThat(total).isEqualByComparingTo("127.50");
     }
 
     @Test
