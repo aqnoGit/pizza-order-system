@@ -11,11 +11,13 @@ import com.pizzaria.dto.request.CriarPedidoRequest;
 import com.pizzaria.dto.request.ItemPedidoRequest;
 import com.pizzaria.dto.response.PedidoResponse;
 import com.pizzaria.entity.Comanda;
+import com.pizzaria.entity.ItemPedido;
 import com.pizzaria.entity.OrigemPedido;
 import com.pizzaria.entity.Pedido;
 import com.pizzaria.entity.Produto;
 import com.pizzaria.entity.StatusPedido;
 import com.pizzaria.exception.ComandaFechadaException;
+import com.pizzaria.exception.ConflitoException;
 import com.pizzaria.exception.ProdutoIndisponivelException;
 import com.pizzaria.exception.RecursoNaoEncontradoException;
 import com.pizzaria.mapper.PedidoMapper;
@@ -54,6 +56,37 @@ class PedidoServiceTest {
     private final Comanda comanda = Comanda.abrir(UUID.randomUUID(), UUID.randomUUID());
     private final Produto produto = new Produto(UUID.randomUUID(), "Calabresa", null, new BigDecimal("42.50"),
             "PIZZA", true);
+
+    @Test
+    void atualizaStatusDoPedidoParaOProximo() {
+        Pedido pedido = Pedido.presencial(comanda.getId(), List.of(ItemPedido.de(produto, 1)));
+        when(pedidoRepository.findById(pedido.getId())).thenReturn(Optional.of(pedido));
+
+        PedidoResponse resposta = pedidoService.atualizarStatus(pedido.getId(), StatusPedido.EM_PREPARO);
+
+        assertThat(resposta.status()).isEqualTo(StatusPedido.EM_PREPARO);
+        assertThat(pedido.getStatus()).isEqualTo(StatusPedido.EM_PREPARO);
+    }
+
+    @Test
+    void rejeitaTransicaoQuePulaEtapaSemAlterarOStatus() {
+        Pedido pedido = Pedido.presencial(comanda.getId(), List.of(ItemPedido.de(produto, 1)));
+        when(pedidoRepository.findById(pedido.getId())).thenReturn(Optional.of(pedido));
+
+        assertThatThrownBy(() -> pedidoService.atualizarStatus(pedido.getId(), StatusPedido.PRONTO))
+                .isInstanceOf(ConflitoException.class);
+        assertThat(pedido.getStatus()).isEqualTo(StatusPedido.REGISTRADO);
+    }
+
+    @Test
+    void atualizarStatusDePedidoInexistenteLancaNaoEncontrado() {
+        UUID pedidoId = UUID.randomUUID();
+        when(pedidoRepository.findById(pedidoId)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> pedidoService.atualizarStatus(pedidoId, StatusPedido.EM_PREPARO))
+                .isInstanceOf(RecursoNaoEncontradoException.class)
+                .hasMessage(PedidoService.MENSAGEM_PEDIDO_NAO_ENCONTRADO);
+    }
 
     @Test
     void criaPedidoPresencialComPrecoVigenteDoProduto() {
