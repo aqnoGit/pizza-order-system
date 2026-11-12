@@ -127,7 +127,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy dist/pizzaria-frontend/browser --project-name=pizza-order-system
+          command: pages deploy dist/pizzaria-frontend/browser --project-name=pede-pizza
 
   deploy-backend:
     name: Deploy Backend (Render)
