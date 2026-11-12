@@ -11,9 +11,12 @@ import static org.mockito.Mockito.when;
 
 import com.pizzaria.dto.request.CriarPedidoRequest;
 import com.pizzaria.dto.request.ItemPedidoRequest;
+import com.pizzaria.dto.response.PedidoProntoResponse;
 import com.pizzaria.dto.response.PedidoResponse;
 import com.pizzaria.entity.Comanda;
 import com.pizzaria.entity.ItemPedido;
+import com.pizzaria.entity.Mesa;
+import com.pizzaria.entity.StatusMesa;
 import com.pizzaria.entity.OrigemPedido;
 import com.pizzaria.entity.Pedido;
 import com.pizzaria.entity.Produto;
@@ -24,6 +27,7 @@ import com.pizzaria.exception.ProdutoIndisponivelException;
 import com.pizzaria.exception.RecursoNaoEncontradoException;
 import com.pizzaria.mapper.PedidoMapper;
 import com.pizzaria.repository.ComandaRepository;
+import com.pizzaria.repository.MesaRepository;
 import com.pizzaria.repository.PedidoRepository;
 import com.pizzaria.repository.ProdutoRepository;
 import java.math.BigDecimal;
@@ -43,6 +47,9 @@ class PedidoServiceTest {
 
     @Mock
     private ComandaRepository comandaRepository;
+
+    @Mock
+    private MesaRepository mesaRepository;
 
     @Mock
     private ProdutoRepository produtoRepository;
@@ -72,6 +79,61 @@ class PedidoServiceTest {
 
         assertThat(resposta.status()).isEqualTo(StatusPedido.EM_PREPARO);
         assertThat(pedido.getStatus()).isEqualTo(StatusPedido.EM_PREPARO);
+    }
+
+    @Test
+    void publicaParaOGarcomQuandoPedidoPresencialFicaPronto() {
+        Mesa mesa = new Mesa(comanda.getMesaId(), 7, StatusMesa.OCUPADA);
+        Pedido pedido = pedidoEmPreparo(comanda.getId());
+        when(pedidoRepository.findById(pedido.getId())).thenReturn(Optional.of(pedido));
+        when(comandaRepository.findById(comanda.getId())).thenReturn(Optional.of(comanda));
+        when(mesaRepository.findById(comanda.getMesaId())).thenReturn(Optional.of(mesa));
+
+        pedidoService.atualizarStatus(pedido.getId(), StatusPedido.PRONTO);
+
+        verify(mensageria).convertAndSend(PedidoService.TOPICO_GARCOM_PEDIDOS_PRONTOS,
+                new PedidoProntoResponse(pedido.getId(), 7));
+    }
+
+    @Test
+    void naoPublicaParaOGarcomAoIniciarPreparoNemAoEntregar() {
+        Pedido pedido = Pedido.presencial(comanda.getId(), List.of(ItemPedido.de(produto, 1)));
+        when(pedidoRepository.findById(pedido.getId())).thenReturn(Optional.of(pedido));
+
+        pedidoService.atualizarStatus(pedido.getId(), StatusPedido.EM_PREPARO);
+        pedido.avancarPara(StatusPedido.PRONTO);
+        pedidoService.atualizarStatus(pedido.getId(), StatusPedido.ENTREGUE);
+
+        verify(mensageria, never()).convertAndSend(anyString(), any(PedidoProntoResponse.class));
+    }
+
+    @Test
+    void naoPublicaQuandoTransicaoParaProntoEInvalida() {
+        Pedido pedido = Pedido.presencial(comanda.getId(), List.of(ItemPedido.de(produto, 1)));
+        when(pedidoRepository.findById(pedido.getId())).thenReturn(Optional.of(pedido));
+
+        assertThatThrownBy(() -> pedidoService.atualizarStatus(pedido.getId(), StatusPedido.PRONTO))
+                .isInstanceOf(ConflitoException.class);
+
+        verify(mensageria, never()).convertAndSend(anyString(), any(PedidoProntoResponse.class));
+        assertThat(pedido.getStatus()).isEqualTo(StatusPedido.REGISTRADO);
+    }
+
+    @Test
+    void naoPublicaNemFalhaQuandoPedidoNaoTemComanda() {
+        Pedido pedido = pedidoEmPreparo(null);
+        when(pedidoRepository.findById(pedido.getId())).thenReturn(Optional.of(pedido));
+
+        PedidoResponse resposta = pedidoService.atualizarStatus(pedido.getId(), StatusPedido.PRONTO);
+
+        assertThat(resposta.status()).isEqualTo(StatusPedido.PRONTO);
+        verify(mensageria, never()).convertAndSend(anyString(), any(PedidoProntoResponse.class));
+    }
+
+    private Pedido pedidoEmPreparo(UUID comandaId) {
+        Pedido pedido = Pedido.presencial(comandaId, List.of(ItemPedido.de(produto, 1)));
+        pedido.avancarPara(StatusPedido.EM_PREPARO);
+        return pedido;
     }
 
     @Test

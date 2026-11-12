@@ -2,6 +2,7 @@ package com.pizzaria.service;
 
 import com.pizzaria.dto.request.CriarPedidoRequest;
 import com.pizzaria.dto.request.ItemPedidoRequest;
+import com.pizzaria.dto.response.PedidoProntoResponse;
 import com.pizzaria.dto.response.PedidoResponse;
 import com.pizzaria.entity.Comanda;
 import com.pizzaria.entity.ItemPedido;
@@ -12,6 +13,7 @@ import com.pizzaria.exception.ProdutoIndisponivelException;
 import com.pizzaria.exception.RecursoNaoEncontradoException;
 import com.pizzaria.mapper.PedidoMapper;
 import com.pizzaria.repository.ComandaRepository;
+import com.pizzaria.repository.MesaRepository;
 import com.pizzaria.repository.PedidoRepository;
 import com.pizzaria.repository.ProdutoRepository;
 import java.util.List;
@@ -33,7 +35,10 @@ public class PedidoService {
 
     public static final String TOPICO_FILA_PEDIDOS = "/topic/pedidos/fila";
 
+    public static final String TOPICO_GARCOM_PEDIDOS_PRONTOS = "/topic/garcom/pedidos-prontos";
+
     private final ComandaRepository comandaRepository;
+    private final MesaRepository mesaRepository;
     private final ProdutoRepository produtoRepository;
     private final PedidoRepository pedidoRepository;
     private final PedidoMapper pedidoMapper;
@@ -57,7 +62,20 @@ public class PedidoService {
         Pedido pedido = pedidoRepository.findById(pedidoId)
                 .orElseThrow(() -> new RecursoNaoEncontradoException(MENSAGEM_PEDIDO_NAO_ENCONTRADO));
         pedido.avancarPara(novoStatus);
+        if (novoStatus == StatusPedido.PRONTO) {
+            notificarGarcomPedidoPronto(pedido);
+        }
         return pedidoMapper.paraResponse(pedido);
+    }
+
+    private void notificarGarcomPedidoPronto(Pedido pedido) {
+        if (pedido.getComandaId() == null) {
+            return;
+        }
+        comandaRepository.findById(pedido.getComandaId())
+                .flatMap(comanda -> mesaRepository.findById(comanda.getMesaId()))
+                .ifPresent(mesa -> mensageria.convertAndSend(TOPICO_GARCOM_PEDIDOS_PRONTOS,
+                        new PedidoProntoResponse(pedido.getId(), mesa.getNumero())));
     }
 
     private ItemPedido montarItem(ItemPedidoRequest item) {
