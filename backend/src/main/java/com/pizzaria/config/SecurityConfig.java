@@ -67,6 +67,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/comandas/*").hasRole(Perfil.GARCOM.name())
                         .requestMatchers(HttpMethod.POST, "/comandas/*/pedidos").hasRole(Perfil.GARCOM.name())
                         .requestMatchers(HttpMethod.GET, "/pedidos/fila").hasRole(Perfil.COZINHA.name())
+                        .requestMatchers(HttpMethod.PATCH, "/pedidos/*/status")
+                        .hasAnyRole(Perfil.COZINHA.name(), Perfil.GARCOM.name())
                         .requestMatchers(HttpMethod.PATCH, "/comandas/*/fechar").hasRole(Perfil.GARCOM.name())
                         .anyRequest().authenticated())
                 .exceptionHandling(erros -> erros
