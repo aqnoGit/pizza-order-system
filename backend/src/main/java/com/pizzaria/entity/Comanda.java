@@ -1,5 +1,6 @@
 package com.pizzaria.entity;
 
+import com.pizzaria.exception.ComandaFechadaException;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -18,6 +19,8 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Comanda {
+
+    public static final String MENSAGEM_COMANDA_FECHADA = "Comanda fechada nao aceita novos itens";
 
     @Id
     private UUID id;
@@ -59,6 +62,12 @@ public class Comanda {
 
     public boolean estaFechada() {
         return status == StatusComanda.FECHADA;
+    }
+
+    public void exigirAberta() {
+        if (estaFechada()) {
+            throw new ComandaFechadaException(MENSAGEM_COMANDA_FECHADA);
+        }
     }
 
     public void fechar(BigDecimal valorTotal) {
