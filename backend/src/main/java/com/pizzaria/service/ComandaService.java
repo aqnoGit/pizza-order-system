@@ -24,6 +24,8 @@ public class ComandaService {
 
     public static final String MENSAGEM_COMANDA_NAO_ENCONTRADA = "Comanda nao encontrada";
 
+    public static final String MENSAGEM_MESA_SEM_COMANDA_ABERTA = "Mesa nao possui comanda aberta";
+
     public static final String MENSAGEM_MESA_COM_COMANDA_ABERTA = "Mesa ja possui uma comanda aberta";
 
     public static final String MENSAGEM_COMANDA_JA_FECHADA = "Comanda ja esta fechada";
@@ -49,6 +51,13 @@ public class ComandaService {
         Comanda comanda = comandaRepository.findById(id)
                 .orElseThrow(() -> new RecursoNaoEncontradoException(MENSAGEM_COMANDA_NAO_ENCONTRADA));
         return comandaMapper.paraDetalhes(comanda);
+    }
+
+    @Transactional(readOnly = true)
+    public ComandaResponse buscarAbertaDaMesa(UUID mesaId) {
+        Comanda comanda = comandaRepository.findByMesaIdAndStatus(mesaId, StatusComanda.ABERTA)
+                .orElseThrow(() -> new RecursoNaoEncontradoException(MENSAGEM_MESA_SEM_COMANDA_ABERTA));
+        return comandaMapper.paraResponse(comanda);
     }
 
     @Transactional
