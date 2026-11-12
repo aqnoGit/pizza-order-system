@@ -1,6 +1,7 @@
 package com.pizzaria.service;
 
 import com.pizzaria.dto.request.CriarComandaRequest;
+import com.pizzaria.dto.response.ComandaDetalhesResponse;
 import com.pizzaria.dto.response.ComandaResponse;
 import com.pizzaria.entity.Comanda;
 import com.pizzaria.entity.Mesa;
@@ -21,6 +22,8 @@ public class ComandaService {
 
     public static final String MENSAGEM_MESA_NAO_ENCONTRADA = "Mesa nao encontrada";
 
+    public static final String MENSAGEM_COMANDA_NAO_ENCONTRADA = "Comanda nao encontrada";
+
     public static final String MENSAGEM_MESA_COM_COMANDA_ABERTA = "Mesa ja possui uma comanda aberta";
 
     private final ComandaRepository comandaRepository;
@@ -37,5 +40,12 @@ public class ComandaService {
         mesa.ocupar();
         Comanda comanda = comandaRepository.save(Comanda.abrir(requisicao.mesaId(), garcomId));
         return comandaMapper.paraResponse(comanda);
+    }
+
+    @Transactional(readOnly = true)
+    public ComandaDetalhesResponse buscarPorId(UUID id) {
+        Comanda comanda = comandaRepository.findById(id)
+                .orElseThrow(() -> new RecursoNaoEncontradoException(MENSAGEM_COMANDA_NAO_ENCONTRADA));
+        return comandaMapper.paraDetalhes(comanda);
     }
 }

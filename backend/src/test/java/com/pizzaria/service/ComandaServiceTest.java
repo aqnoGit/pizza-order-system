@@ -8,6 +8,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.pizzaria.dto.request.CriarComandaRequest;
+import com.pizzaria.dto.response.ComandaDetalhesResponse;
 import com.pizzaria.dto.response.ComandaResponse;
 import com.pizzaria.entity.Comanda;
 import com.pizzaria.entity.Mesa;
@@ -101,5 +102,28 @@ class ComandaServiceTest {
                 .isInstanceOf(ConflitoException.class)
                 .hasMessage(ComandaService.MENSAGEM_MESA_COM_COMANDA_ABERTA);
         verify(comandaRepository, never()).save(any());
+    }
+
+    @Test
+    void buscaComandaExistenteSemItens() {
+        Comanda comanda = Comanda.abrir(mesaId, garcomId);
+        when(comandaRepository.findById(comanda.getId())).thenReturn(Optional.of(comanda));
+
+        ComandaDetalhesResponse resposta = comandaService.buscarPorId(comanda.getId());
+
+        assertThat(resposta.id()).isEqualTo(comanda.getId());
+        assertThat(resposta.mesaId()).isEqualTo(mesaId);
+        assertThat(resposta.status()).isEqualTo(StatusComanda.ABERTA);
+        assertThat(resposta.itens()).isEmpty();
+    }
+
+    @Test
+    void lancaNaoEncontradoQuandoAComandaNaoExiste() {
+        UUID id = UUID.randomUUID();
+        when(comandaRepository.findById(id)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> comandaService.buscarPorId(id))
+                .isInstanceOf(RecursoNaoEncontradoException.class)
+                .hasMessage(ComandaService.MENSAGEM_COMANDA_NAO_ENCONTRADA);
     }
 }

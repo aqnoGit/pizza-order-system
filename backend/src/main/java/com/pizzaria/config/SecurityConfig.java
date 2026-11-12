@@ -64,6 +64,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/mesas").hasRole(Perfil.GARCOM.name())
                         .requestMatchers(HttpMethod.POST, "/comandas").hasRole(Perfil.GARCOM.name())
+                        .requestMatchers(HttpMethod.GET, "/comandas/*").hasRole(Perfil.GARCOM.name())
                         .anyRequest().authenticated())
                 .exceptionHandling(erros -> erros
                         .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))

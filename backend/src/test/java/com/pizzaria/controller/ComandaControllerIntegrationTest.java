@@ -1,6 +1,7 @@
 package com.pizzaria.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -139,6 +140,39 @@ class ComandaControllerIntegrationTest extends PostgresIntegrationTest {
     void semTokenRetorna401() throws Exception {
         mockMvc.perform(post("/comandas").contentType(MediaType.APPLICATION_JSON).content(corpo(mesaId.toString())))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void garcomConsultaComandaSemItens() throws Exception {
+        UUID comandaId = UUID.randomUUID();
+        jdbcTemplate.update("insert into comandas (id, mesa_id, garcom_id, status) values (?, ?, ?, 'ABERTA')",
+                comandaId, mesaId, garcomId);
+
+        mockMvc.perform(get("/comandas/" + comandaId).header(HttpHeaders.AUTHORIZATION, bearer(Perfil.GARCOM)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(comandaId.toString()))
+                .andExpect(jsonPath("$.mesaId").value(mesaId.toString()))
+                .andExpect(jsonPath("$.status").value("ABERTA"))
+                .andExpect(jsonPath("$.abertaEm").isNotEmpty())
+                .andExpect(jsonPath("$.valorTotal").value(0))
+                .andExpect(jsonPath("$.itens").isEmpty());
+    }
+
+    @Test
+    void consultaDeComandaInexistenteRetorna404() throws Exception {
+        mockMvc.perform(get("/comandas/" + UUID.randomUUID()).header(HttpHeaders.AUTHORIZATION, bearer(Perfil.GARCOM)))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void consultaDeComandaSemTokenRetorna401() throws Exception {
+        mockMvc.perform(get("/comandas/" + UUID.randomUUID())).andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void cozinhaNaoConsultaComanda() throws Exception {
+        mockMvc.perform(get("/comandas/" + UUID.randomUUID()).header(HttpHeaders.AUTHORIZATION, bearer(Perfil.COZINHA)))
+                .andExpect(status().isForbidden());
     }
 
     private String statusDaMesa() {
