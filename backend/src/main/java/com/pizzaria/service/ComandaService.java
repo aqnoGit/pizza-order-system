@@ -61,7 +61,7 @@ public class ComandaService {
     }
 
     @Transactional
-    public ComandaResponse fechar(UUID id) {
+    public ComandaResponse fechar(UUID id, String observacao) {
         Comanda comanda = comandaRepository.findById(id)
                 .orElseThrow(() -> new RecursoNaoEncontradoException(MENSAGEM_COMANDA_NAO_ENCONTRADA));
         if (comanda.estaFechada()) {
@@ -69,7 +69,7 @@ public class ComandaService {
         }
         Mesa mesa = mesaRepository.findById(comanda.getMesaId())
                 .orElseThrow(() -> new RecursoNaoEncontradoException(MENSAGEM_MESA_NAO_ENCONTRADA));
-        comanda.fechar(comandaRepository.somarValorDosItens(id));
+        comanda.fechar(comandaRepository.somarValorDosItens(id), observacao);
         mesa.liberar();
         return comandaMapper.paraResponse(comanda);
     }

@@ -142,7 +142,7 @@ class PedidoServiceTest {
 
     @Test
     void comandaFechadaLancaExcecaoSemSalvar() {
-        comanda.fechar(BigDecimal.ZERO);
+        comanda.fechar(BigDecimal.ZERO, null);
         when(comandaRepository.findById(comanda.getId())).thenReturn(Optional.of(comanda));
 
         assertThatThrownBy(() -> pedidoService.criarPresencial(comanda.getId(), requisicao(produto.getId(), 1)))

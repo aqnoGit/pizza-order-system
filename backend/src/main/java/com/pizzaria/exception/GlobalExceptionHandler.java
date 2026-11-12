@@ -34,6 +34,11 @@ public class GlobalExceptionHandler {
         return resposta(HttpStatus.UNPROCESSABLE_ENTITY, excecao.getMessage(), List.of());
     }
 
+    @ExceptionHandler(ObservacaoInvalidaException.class)
+    public ResponseEntity<ErroResponse> tratarObservacaoInvalida(ObservacaoInvalidaException excecao) {
+        return resposta(HttpStatus.UNPROCESSABLE_ENTITY, excecao.getMessage(), List.of());
+    }
+
     @ExceptionHandler(ProdutoIndisponivelException.class)
     public ResponseEntity<ErroResponse> tratarProdutoIndisponivel(ProdutoIndisponivelException excecao) {
         return resposta(HttpStatus.UNPROCESSABLE_ENTITY, excecao.getMessage(), List.of());

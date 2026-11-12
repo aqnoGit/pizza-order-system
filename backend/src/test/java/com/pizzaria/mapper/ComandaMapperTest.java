@@ -20,19 +20,20 @@ class ComandaMapperTest {
     void copiaTodosOsCamposDaComanda() {
         LocalDateTime abertaEm = LocalDateTime.now();
         Comanda comanda = new Comanda(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), StatusComanda.ABERTA,
-                abertaEm, null, BigDecimal.ZERO);
+                abertaEm, null, BigDecimal.ZERO, "sem cebola");
 
         ComandaResponse resposta = comandaMapper.paraResponse(comanda);
 
         assertThat(resposta).isEqualTo(new ComandaResponse(comanda.getId(), comanda.getMesaId(),
-                comanda.getGarcomId(), StatusComanda.ABERTA, abertaEm, null, BigDecimal.ZERO));
+                comanda.getGarcomId(), StatusComanda.ABERTA, abertaEm, null, BigDecimal.ZERO,
+                "sem cebola"));
     }
 
     @Test
     void detalhesCopiamOsCamposEIniciamSemItens() {
         LocalDateTime abertaEm = LocalDateTime.now();
         Comanda comanda = new Comanda(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), StatusComanda.ABERTA,
-                abertaEm, null, BigDecimal.ZERO);
+                abertaEm, null, BigDecimal.ZERO, "sem cebola");
 
         ComandaDetalhesResponse resposta = comandaMapper.paraDetalhes(comanda);
 

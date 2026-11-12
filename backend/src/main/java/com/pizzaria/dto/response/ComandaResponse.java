@@ -6,5 +6,6 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 public record ComandaResponse(UUID id, UUID mesaId, UUID garcomId, StatusComanda status, LocalDateTime abertaEm,
-        LocalDateTime fechadaEm, BigDecimal valorTotal) {
+        LocalDateTime fechadaEm, BigDecimal valorTotal,
+        String observacao) {
 }

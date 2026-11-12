@@ -1,6 +1,7 @@
 package com.pizzaria.controller;
 
 import com.pizzaria.dto.request.CriarComandaRequest;
+import com.pizzaria.dto.request.FecharComandaRequest;
 import com.pizzaria.dto.response.ComandaDetalhesResponse;
 import com.pizzaria.dto.response.ComandaResponse;
 import com.pizzaria.service.ComandaService;
@@ -44,7 +45,9 @@ public class ComandaController {
     }
 
     @PatchMapping("/{id}/fechar")
-    public ComandaResponse fechar(@PathVariable UUID id) {
-        return comandaService.fechar(id);
+    public ComandaResponse fechar(@PathVariable UUID id,
+            @RequestBody(required = false) FecharComandaRequest requisicao) {
+        String observacao = requisicao == null ? null : requisicao.observacao();
+        return comandaService.fechar(id, observacao);
     }
 }

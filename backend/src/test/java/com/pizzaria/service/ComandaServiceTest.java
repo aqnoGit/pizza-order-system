@@ -148,12 +148,23 @@ class ComandaServiceTest {
     }
 
     @Test
+    void fechaComandaGravandoAObservacaoInformada() {
+        Comanda comanda = Comanda.abrir(mesaId, garcomId);
+        when(comandaRepository.findById(comanda.getId())).thenReturn(Optional.of(comanda));
+        when(mesaRepository.findById(mesaId)).thenReturn(Optional.of(mesa));
+
+        ComandaResponse resposta = comandaService.fechar(comanda.getId(), "cliente pediu nota");
+
+        assertThat(resposta.observacao()).isEqualTo("cliente pediu nota");
+    }
+
+    @Test
     void fechaComandaAbertaRegistrandoADataDeFechamento() {
         Comanda comanda = Comanda.abrir(mesaId, garcomId);
         when(comandaRepository.findById(comanda.getId())).thenReturn(Optional.of(comanda));
         when(mesaRepository.findById(mesaId)).thenReturn(Optional.of(mesa));
 
-        ComandaResponse resposta = comandaService.fechar(comanda.getId());
+        ComandaResponse resposta = comandaService.fechar(comanda.getId(), null);
 
         assertThat(resposta.status()).isEqualTo(StatusComanda.FECHADA);
         assertThat(resposta.fechadaEm()).isNotNull();
@@ -166,7 +177,7 @@ class ComandaServiceTest {
         when(mesaRepository.findById(mesaId)).thenReturn(Optional.of(mesa));
         when(comandaRepository.somarValorDosItens(comanda.getId())).thenReturn(new BigDecimal("87.50"));
 
-        ComandaResponse resposta = comandaService.fechar(comanda.getId());
+        ComandaResponse resposta = comandaService.fechar(comanda.getId(), null);
 
         assertThat(resposta.valorTotal()).isEqualByComparingTo("87.50");
     }
@@ -178,7 +189,7 @@ class ComandaServiceTest {
         when(mesaRepository.findById(mesaId)).thenReturn(Optional.of(mesa));
         when(comandaRepository.somarValorDosItens(comanda.getId())).thenReturn(BigDecimal.ZERO);
 
-        ComandaResponse resposta = comandaService.fechar(comanda.getId());
+        ComandaResponse resposta = comandaService.fechar(comanda.getId(), null);
 
         assertThat(resposta.valorTotal()).isEqualByComparingTo(BigDecimal.ZERO);
     }
@@ -186,20 +197,20 @@ class ComandaServiceTest {
     @Test
     void naoSomaOsItensQuandoAComandaJaEstaFechada() {
         Comanda comanda = Comanda.abrir(mesaId, garcomId);
-        comanda.fechar(BigDecimal.ZERO);
+        comanda.fechar(BigDecimal.ZERO, null);
         when(comandaRepository.findById(comanda.getId())).thenReturn(Optional.of(comanda));
 
-        assertThatThrownBy(() -> comandaService.fechar(comanda.getId())).isInstanceOf(ConflitoException.class);
+        assertThatThrownBy(() -> comandaService.fechar(comanda.getId(), null)).isInstanceOf(ConflitoException.class);
         verify(comandaRepository, never()).somarValorDosItens(any());
     }
 
     @Test
     void lancaConflitoAoFecharComandaJaFechada() {
         Comanda comanda = Comanda.abrir(mesaId, garcomId);
-        comanda.fechar(BigDecimal.ZERO);
+        comanda.fechar(BigDecimal.ZERO, null);
         when(comandaRepository.findById(comanda.getId())).thenReturn(Optional.of(comanda));
 
-        assertThatThrownBy(() -> comandaService.fechar(comanda.getId()))
+        assertThatThrownBy(() -> comandaService.fechar(comanda.getId(), null))
                 .isInstanceOf(ConflitoException.class)
                 .hasMessage(ComandaService.MENSAGEM_COMANDA_JA_FECHADA);
     }
@@ -209,7 +220,7 @@ class ComandaServiceTest {
         UUID id = UUID.randomUUID();
         when(comandaRepository.findById(id)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> comandaService.fechar(id))
+        assertThatThrownBy(() -> comandaService.fechar(id, null))
                 .isInstanceOf(RecursoNaoEncontradoException.class)
                 .hasMessage(ComandaService.MENSAGEM_COMANDA_NAO_ENCONTRADA);
     }
@@ -221,7 +232,7 @@ class ComandaServiceTest {
         when(comandaRepository.findById(comanda.getId())).thenReturn(Optional.of(comanda));
         when(mesaRepository.findById(mesaId)).thenReturn(Optional.of(mesaOcupada));
 
-        comandaService.fechar(comanda.getId());
+        comandaService.fechar(comanda.getId(), null);
 
         assertThat(mesaOcupada.getStatus()).isEqualTo(StatusMesa.LIVRE);
     }
@@ -230,10 +241,10 @@ class ComandaServiceTest {
     void naoLiberaAMesaQuandoAComandaJaEstaFechada() {
         Mesa mesaOcupada = new Mesa(mesaId, 1, StatusMesa.OCUPADA);
         Comanda comanda = Comanda.abrir(mesaId, garcomId);
-        comanda.fechar(BigDecimal.ZERO);
+        comanda.fechar(BigDecimal.ZERO, null);
         when(comandaRepository.findById(comanda.getId())).thenReturn(Optional.of(comanda));
 
-        assertThatThrownBy(() -> comandaService.fechar(comanda.getId())).isInstanceOf(ConflitoException.class);
+        assertThatThrownBy(() -> comandaService.fechar(comanda.getId(), null)).isInstanceOf(ConflitoException.class);
         assertThat(mesaOcupada.getStatus()).isEqualTo(StatusMesa.OCUPADA);
         verify(mesaRepository, never()).findById(any());
     }
@@ -244,7 +255,7 @@ class ComandaServiceTest {
         when(comandaRepository.findById(comanda.getId())).thenReturn(Optional.of(comanda));
         when(mesaRepository.findById(mesaId)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> comandaService.fechar(comanda.getId()))
+        assertThatThrownBy(() -> comandaService.fechar(comanda.getId(), null))
                 .isInstanceOf(RecursoNaoEncontradoException.class)
                 .hasMessage(ComandaService.MENSAGEM_MESA_NAO_ENCONTRADA);
         assertThat(comanda.estaFechada()).isFalse();
