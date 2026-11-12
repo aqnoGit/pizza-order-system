@@ -25,6 +25,27 @@ class PedidoTest {
     }
 
     @Test
+    void valorTotalSomaPrecoVezesQuantidadeDeItensDiferentes() {
+        Produto pizza = new Produto(UUID.randomUUID(), "Calabresa", null, new BigDecimal("39.90"), "PIZZA", true);
+        Produto bebida = new Produto(UUID.randomUUID(), "Guarana", null, new BigDecimal("6.50"), "BEBIDA", true);
+        Produto sobremesa = new Produto(UUID.randomUUID(), "Pudim", null, new BigDecimal("12.25"), "SOBREMESA", true);
+
+        Pedido pedido = Pedido.presencial(UUID.randomUUID(),
+                List.of(ItemPedido.de(pizza, 2), ItemPedido.de(bebida, 3), ItemPedido.de(sobremesa, 4)));
+
+        assertThat(pedido.getValorTotal()).isEqualByComparingTo("148.30");
+    }
+
+    @Test
+    void valorTotalDeItemUnicoEhPrecoVezesQuantidade() {
+        Produto pizza = new Produto(UUID.randomUUID(), "Calabresa", null, new BigDecimal("40.00"), "PIZZA", true);
+
+        Pedido pedido = Pedido.presencial(UUID.randomUUID(), List.of(ItemPedido.de(pizza, 3)));
+
+        assertThat(pedido.getValorTotal()).isEqualByComparingTo("120.00");
+    }
+
+    @Test
     void itemCongelaOPrecoDoProdutoNoMomentoDaCriacao() {
         Produto produto = new Produto(UUID.randomUUID(), "Calabresa", null, new BigDecimal("40.00"), "PIZZA", true);
 
