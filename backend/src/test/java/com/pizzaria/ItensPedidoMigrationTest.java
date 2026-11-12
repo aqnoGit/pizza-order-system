@@ -27,12 +27,14 @@ class ItensPedidoMigrationTest extends PostgresIntegrationTest {
                         + "where table_name = 'itens_pedido'");
 
         assertThat(colunas).extracting(coluna -> coluna.get("column_name"))
-                .containsExactlyInAnyOrder("id", "pedido_id", "produto_id", "quantidade", "preco_unitario");
+                .containsExactlyInAnyOrder("id", "pedido_id", "produto_id", "quantidade", "preco_unitario",
+                        "observacao");
         assertThat(tipoDa(colunas, "id")).isEqualTo("uuid");
         assertThat(tipoDa(colunas, "pedido_id")).isEqualTo("uuid");
         assertThat(tipoDa(colunas, "produto_id")).isEqualTo("uuid");
         assertThat(tipoDa(colunas, "quantidade")).isEqualTo("integer");
         assertThat(tipoDa(colunas, "preco_unitario")).isEqualTo("numeric");
+        assertThat(tipoDa(colunas, "observacao")).isEqualTo("character varying");
     }
 
     @Test

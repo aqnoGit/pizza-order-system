@@ -28,15 +28,22 @@ public class ItemPedido {
     @Column(name = "preco_unitario", nullable = false)
     private BigDecimal precoUnitario;
 
-    public ItemPedido(UUID id, UUID produtoId, int quantidade, BigDecimal precoUnitario) {
+    private String observacao;
+
+    public ItemPedido(UUID id, UUID produtoId, int quantidade, BigDecimal precoUnitario, String observacao) {
         this.id = id;
         this.produtoId = produtoId;
         this.quantidade = quantidade;
         this.precoUnitario = precoUnitario;
+        this.observacao = observacao;
     }
 
     public static ItemPedido de(Produto produto, int quantidade) {
-        return new ItemPedido(UUID.randomUUID(), produto.getId(), quantidade, produto.getPreco());
+        return de(produto, quantidade, null);
+    }
+
+    public static ItemPedido de(Produto produto, int quantidade, String observacao) {
+        return new ItemPedido(UUID.randomUUID(), produto.getId(), quantidade, produto.getPreco(), observacao);
     }
 
     public BigDecimal subtotal() {
