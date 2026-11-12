@@ -19,6 +19,11 @@ public class GlobalExceptionHandler {
         return resposta(HttpStatus.UNAUTHORIZED, excecao.getMessage(), List.of());
     }
 
+    @ExceptionHandler(RecursoNaoEncontradoException.class)
+    public ResponseEntity<ErroResponse> tratarNaoEncontrado(RecursoNaoEncontradoException excecao) {
+        return resposta(HttpStatus.NOT_FOUND, excecao.getMessage(), List.of());
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErroResponse> tratarValidacao(MethodArgumentNotValidException excecao) {
         List<String> campos = excecao.getBindingResult().getFieldErrors().stream()
