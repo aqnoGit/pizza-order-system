@@ -17,6 +17,7 @@ import com.pizzaria.repository.ProdutoRepository;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,10 +31,13 @@ public class PedidoService {
 
     public static final String MENSAGEM_PRODUTO_INDISPONIVEL = "Produto indisponivel";
 
+    public static final String TOPICO_FILA_PEDIDOS = "/topic/pedidos/fila";
+
     private final ComandaRepository comandaRepository;
     private final ProdutoRepository produtoRepository;
     private final PedidoRepository pedidoRepository;
     private final PedidoMapper pedidoMapper;
+    private final SimpMessagingTemplate mensageria;
 
     @Transactional
     public PedidoResponse criarPresencial(UUID comandaId, CriarPedidoRequest requisicao) {
@@ -43,7 +47,9 @@ public class PedidoService {
         List<ItemPedido> itens = requisicao.itens().stream().map(this::montarItem).toList();
         Pedido pedido = pedidoRepository.save(Pedido.presencial(comandaId, itens));
         comanda.somarAoTotal(pedido.getValorTotal());
-        return pedidoMapper.paraResponse(pedido);
+        PedidoResponse resposta = pedidoMapper.paraResponse(pedido);
+        mensageria.convertAndSend(TOPICO_FILA_PEDIDOS, resposta);
+        return resposta;
     }
 
     @Transactional
