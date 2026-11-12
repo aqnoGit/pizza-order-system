@@ -1,5 +1,6 @@
 package com.pizzaria.entity;
 
+import com.pizzaria.exception.ConflitoException;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -23,6 +24,8 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Pedido {
+
+    public static final String MENSAGEM_TRANSICAO_INVALIDA = "Transicao de status invalida: de ";
 
     @Id
     private UUID id;
@@ -60,5 +63,12 @@ public class Pedido {
 
     public static Pedido presencial(UUID comandaId, List<ItemPedido> itens) {
         return new Pedido(UUID.randomUUID(), comandaId, OrigemPedido.PRESENCIAL, itens);
+    }
+
+    public void avancarPara(StatusPedido novoStatus) {
+        if (!status.permiteAvancarPara(novoStatus)) {
+            throw new ConflitoException(MENSAGEM_TRANSICAO_INVALIDA + status + " para " + novoStatus);
+        }
+        this.status = novoStatus;
     }
 }

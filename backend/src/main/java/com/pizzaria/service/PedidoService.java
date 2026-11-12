@@ -7,6 +7,7 @@ import com.pizzaria.entity.Comanda;
 import com.pizzaria.entity.ItemPedido;
 import com.pizzaria.entity.Pedido;
 import com.pizzaria.entity.Produto;
+import com.pizzaria.entity.StatusPedido;
 import com.pizzaria.exception.ProdutoIndisponivelException;
 import com.pizzaria.exception.RecursoNaoEncontradoException;
 import com.pizzaria.mapper.PedidoMapper;
@@ -25,6 +26,8 @@ public class PedidoService {
 
     public static final String MENSAGEM_PRODUTO_NAO_ENCONTRADO = "Produto nao encontrado";
 
+    public static final String MENSAGEM_PEDIDO_NAO_ENCONTRADO = "Pedido nao encontrado";
+
     public static final String MENSAGEM_PRODUTO_INDISPONIVEL = "Produto indisponivel";
 
     private final ComandaRepository comandaRepository;
@@ -40,6 +43,14 @@ public class PedidoService {
         List<ItemPedido> itens = requisicao.itens().stream().map(this::montarItem).toList();
         Pedido pedido = pedidoRepository.save(Pedido.presencial(comandaId, itens));
         comanda.somarAoTotal(pedido.getValorTotal());
+        return pedidoMapper.paraResponse(pedido);
+    }
+
+    @Transactional
+    public PedidoResponse atualizarStatus(UUID pedidoId, StatusPedido novoStatus) {
+        Pedido pedido = pedidoRepository.findById(pedidoId)
+                .orElseThrow(() -> new RecursoNaoEncontradoException(MENSAGEM_PEDIDO_NAO_ENCONTRADO));
+        pedido.avancarPara(novoStatus);
         return pedidoMapper.paraResponse(pedido);
     }
 
