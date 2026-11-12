@@ -1,5 +1,5 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://pizza-order-system-api.onrender.com',
-  wsUrl: 'wss://pizza-order-system-api.onrender.com/ws',
+  apiUrl: 'https://pizza-order-system-t5zx.onrender.com',
+  wsUrl: 'wss://pizza-order-system-t5zx.onrender.com/ws',
 };
