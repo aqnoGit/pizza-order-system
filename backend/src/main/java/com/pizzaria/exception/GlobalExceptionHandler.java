@@ -29,6 +29,16 @@ public class GlobalExceptionHandler {
         return resposta(HttpStatus.CONFLICT, excecao.getMessage(), List.of());
     }
 
+    @ExceptionHandler(ComandaFechadaException.class)
+    public ResponseEntity<ErroResponse> tratarComandaFechada(ComandaFechadaException excecao) {
+        return resposta(HttpStatus.UNPROCESSABLE_ENTITY, excecao.getMessage(), List.of());
+    }
+
+    @ExceptionHandler(ProdutoIndisponivelException.class)
+    public ResponseEntity<ErroResponse> tratarProdutoIndisponivel(ProdutoIndisponivelException excecao) {
+        return resposta(HttpStatus.UNPROCESSABLE_ENTITY, excecao.getMessage(), List.of());
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErroResponse> tratarValidacao(MethodArgumentNotValidException excecao) {
         List<String> campos = excecao.getBindingResult().getFieldErrors().stream()
