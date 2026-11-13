@@ -16,6 +16,11 @@ spring:
 pizzaria:
   nome: ${PIZZARIA_NOME:Pede Pizza}
 
+impressora:
+  host: ${IMPRESSORA_HOST:localhost}
+  porta: ${IMPRESSORA_PORTA:9100}
+  timeout-conexao-milissegundos: ${IMPRESSORA_TIMEOUT_CONEXAO_MS:3000}
+
 server:
   port: ${PORT:8080}
 
