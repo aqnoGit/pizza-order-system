@@ -1,16 +1,21 @@
 package com.pizzaria.controller;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.pizzaria.PostgresIntegrationTest;
 import com.pizzaria.entity.Perfil;
 import com.pizzaria.entity.Usuario;
+import com.pizzaria.exception.ImpressoraIndisponivelException;
 import com.pizzaria.service.ImpressoraClient;
 import com.pizzaria.service.JwtService;
+import java.io.IOException;
 import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -66,6 +71,21 @@ class ComprovanteControllerIntegrationTest extends PostgresIntegrationTest {
                 .andExpect(status().isOk());
 
         verify(impressoraClient).enviar(any(byte[].class));
+    }
+
+    @Test
+    void impressoraIndisponivelRetorna503ComMensagemEPermiteReimpressao() throws Exception {
+        doThrow(new ImpressoraIndisponivelException("Impressora indisponivel", new IOException()))
+                .when(impressoraClient).enviar(any(byte[].class));
+
+        mockMvc.perform(post(URL_IMPRIMIR, comandaId).header(HttpHeaders.AUTHORIZATION, bearer(Perfil.GARCOM)))
+                .andExpect(status().isServiceUnavailable())
+                .andExpect(jsonPath("$.mensagem").value("Impressora indisponivel"));
+
+        doNothing().when(impressoraClient).enviar(any(byte[].class));
+
+        mockMvc.perform(post(URL_IMPRIMIR, comandaId).header(HttpHeaders.AUTHORIZATION, bearer(Perfil.GARCOM)))
+                .andExpect(status().isOk());
     }
 
     @Test

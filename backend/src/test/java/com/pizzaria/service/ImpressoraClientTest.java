@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.pizzaria.config.ImpressoraProperties;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import com.pizzaria.exception.ImpressoraIndisponivelException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.CompletableFuture;
@@ -38,7 +39,23 @@ class ImpressoraClientTest {
         ImpressoraClient cliente = new ImpressoraClient(
                 new ImpressoraProperties("localhost", portaFechada, TIMEOUT_MILISSEGUNDOS));
 
-        assertThatThrownBy(() -> cliente.enviar(new byte[] {1})).isInstanceOf(UncheckedIOException.class);
+        assertThatThrownBy(() -> cliente.enviar(new byte[] {1})).isInstanceOf(ImpressoraIndisponivelException.class);
+    }
+
+    @Test
+    void lancaErroDentroDoLimiteQuandoImpressoraNaoLeOsDados() throws IOException {
+        try (ServerSocket impressora = new ServerSocket(0, 1)) {
+            ImpressoraClient cliente = new ImpressoraClient(
+                    new ImpressoraProperties("localhost", impressora.getLocalPort(), TIMEOUT_MILISSEGUNDOS));
+            byte[] conteudoGrande = new byte[64 * 1024 * 1024];
+
+            long inicio = System.nanoTime();
+            assertThatThrownBy(() -> cliente.enviar(conteudoGrande))
+                    .isInstanceOf(ImpressoraIndisponivelException.class);
+            long duracaoMilissegundos = (System.nanoTime() - inicio) / 1_000_000;
+
+            assertThat(duracaoMilissegundos).isLessThan(TIMEOUT_MILISSEGUNDOS * 3L);
+        }
     }
 
     private byte[] lerTudo(ServerSocket servidor) {

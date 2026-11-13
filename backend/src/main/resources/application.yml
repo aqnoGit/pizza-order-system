@@ -19,7 +19,7 @@ pizzaria:
 impressora:
   host: ${IMPRESSORA_HOST:localhost}
   porta: ${IMPRESSORA_PORTA:9100}
-  timeout-conexao-milissegundos: ${IMPRESSORA_TIMEOUT_CONEXAO_MS:3000}
+  timeout-milissegundos: ${IMPRESSORA_TIMEOUT_MS:10000}
 
 server:
   port: ${PORT:8080}
