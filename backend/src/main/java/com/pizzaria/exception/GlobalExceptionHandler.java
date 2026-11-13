@@ -44,6 +44,11 @@ public class GlobalExceptionHandler {
         return resposta(HttpStatus.UNPROCESSABLE_ENTITY, excecao.getMessage(), List.of());
     }
 
+    @ExceptionHandler(ImpressoraIndisponivelException.class)
+    public ResponseEntity<ErroResponse> tratarImpressoraIndisponivel(ImpressoraIndisponivelException excecao) {
+        return resposta(HttpStatus.SERVICE_UNAVAILABLE, excecao.getMessage(), List.of());
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErroResponse> tratarValidacao(MethodArgumentNotValidException excecao) {
         List<String> campos = excecao.getBindingResult().getFieldErrors().stream()
