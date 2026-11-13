@@ -32,6 +32,8 @@ public class ComprovanteService {
     private final ProdutoRepository produtoRepository;
     private final ComprovanteMapper comprovanteMapper;
     private final PizzariaProperties pizzariaProperties;
+    private final ComprovanteEscPosFormatter formatadorEscPos;
+    private final ImpressoraClient impressoraClient;
     private final Clock relogio;
 
     @Transactional(readOnly = true)
@@ -44,6 +46,10 @@ public class ComprovanteService {
                 .flatMap(pedido -> pedido.getItens().stream()).toList();
         return comprovanteMapper.paraResponse(pizzariaProperties.nome(), mesa.getNumero(), itens,
                 nomesDosProdutos(itens), LocalDateTime.now(relogio));
+    }
+
+    public void imprimir(UUID comandaId) {
+        impressoraClient.enviar(formatadorEscPos.formatar(gerar(comandaId)));
     }
 
     private Map<UUID, String> nomesDosProdutos(List<ItemPedido> itens) {

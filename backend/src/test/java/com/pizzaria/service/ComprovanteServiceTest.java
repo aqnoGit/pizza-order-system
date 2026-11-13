@@ -2,6 +2,9 @@ package com.pizzaria.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.pizzaria.config.PizzariaProperties;
@@ -50,6 +53,12 @@ class ComprovanteServiceTest {
     @Mock
     private ProdutoRepository produtoRepository;
 
+    @Mock
+    private ComprovanteEscPosFormatter formatadorEscPos;
+
+    @Mock
+    private ImpressoraClient impressoraClient;
+
     private ComprovanteService comprovanteService;
 
     private final Produto calabresa = new Produto(UUID.randomUUID(), "Calabresa", null, new BigDecimal("42.50"),
@@ -63,7 +72,7 @@ class ComprovanteServiceTest {
     void criarServico() {
         comprovanteService = new ComprovanteService(comandaRepository, mesaRepository, pedidoRepository,
                 produtoRepository, new ComprovanteMapper(), new PizzariaProperties("Pede Pizza"),
-                Clock.fixed(INSTANTE_FIXO, ZoneOffset.UTC));
+                formatadorEscPos, impressoraClient, Clock.fixed(INSTANTE_FIXO, ZoneOffset.UTC));
     }
 
     @Test
@@ -135,5 +144,29 @@ class ComprovanteServiceTest {
         assertThatThrownBy(() -> comprovanteService.gerar(comanda.getId()))
                 .isInstanceOf(RecursoNaoEncontradoException.class)
                 .hasMessage(ComandaService.MENSAGEM_MESA_NAO_ENCONTRADA);
+    }
+
+    @Test
+    void enviaParaImpressoraOsBytesEscPosDoComprovanteGerado() {
+        Pedido pedido = Pedido.presencial(comanda.getId(), List.of(ItemPedido.de(calabresa, 2)));
+        byte[] bytesEscPos = {27, 64, 10};
+        when(comandaRepository.findById(comanda.getId())).thenReturn(Optional.of(comanda));
+        when(mesaRepository.findById(mesa.getId())).thenReturn(Optional.of(mesa));
+        when(pedidoRepository.findByComandaId(comanda.getId())).thenReturn(List.of(pedido));
+        when(produtoRepository.findAllById(Set.of(calabresa.getId()))).thenReturn(List.of(calabresa));
+        when(formatadorEscPos.formatar(any(ComprovanteResponse.class))).thenReturn(bytesEscPos);
+
+        comprovanteService.imprimir(comanda.getId());
+
+        verify(impressoraClient).enviar(bytesEscPos);
+    }
+
+    @Test
+    void naoEnviaParaImpressoraQuandoComandaNaoExiste() {
+        when(comandaRepository.findById(comanda.getId())).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> comprovanteService.imprimir(comanda.getId()))
+                .isInstanceOf(RecursoNaoEncontradoException.class);
+        verifyNoInteractions(impressoraClient);
     }
 }

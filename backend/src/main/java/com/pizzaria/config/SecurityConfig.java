@@ -71,6 +71,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PATCH, "/pedidos/*/status")
                         .hasAnyRole(Perfil.COZINHA.name(), Perfil.GARCOM.name())
                         .requestMatchers(HttpMethod.PATCH, "/comandas/*/fechar").hasRole(Perfil.GARCOM.name())
+                        .requestMatchers(HttpMethod.POST, "/comprovantes/*/imprimir")
+                        .hasAnyRole(Perfil.GARCOM.name(), Perfil.ADMIN.name())
                         .anyRequest().authenticated())
                 .exceptionHandling(erros -> erros
                         .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))

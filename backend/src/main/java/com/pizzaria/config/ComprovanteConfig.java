@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@EnableConfigurationProperties(PizzariaProperties.class)
+@EnableConfigurationProperties({PizzariaProperties.class, ImpressoraProperties.class})
 public class ComprovanteConfig {
 
     @Bean
