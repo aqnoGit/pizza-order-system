@@ -1,8 +1,10 @@
 package com.pizzaria.controller;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -71,6 +73,18 @@ class ComprovanteControllerIntegrationTest extends PostgresIntegrationTest {
                 .andExpect(status().isOk());
 
         verify(impressoraClient).enviar(any(byte[].class));
+    }
+
+    @Test
+    void reimprimeComprovanteJaImpressoEEnviaDuasVezesParaImpressora() throws Exception {
+        for (int tentativa = 0; tentativa < 2; tentativa++) {
+            mockMvc.perform(post(URL_IMPRIMIR, comandaId).header(HttpHeaders.AUTHORIZATION, bearer(Perfil.GARCOM)))
+                    .andExpect(status().isOk());
+        }
+
+        verify(impressoraClient, times(2)).enviar(any(byte[].class));
+        String statusComanda = jdbcTemplate.queryForObject("select status from comandas where id = ?", String.class, comandaId);
+        assertThat(statusComanda).isEqualTo("ABERTA");
     }
 
     @Test
